@@ -1,0 +1,10 @@
+# Declared suppressions — every `noqa`, `skip`, `xfail`, `ignore` in the tree, named
+# with a reason. `agentaudit verify` fails on any suppression missing from this file,
+# and it also fails on a declaration here that no longer matches anything, because a
+# stale exemption is indistinguishable from a live one until somebody checks.
+#
+# Format:  path | reason
+
+src/agentaudit/evidence/verify.py | noqa E402 on the fallback import of tree_digest. The import sits below a sys.path adjustment because this module must run both as an installed package and as a bare script; one definition of tree identity, never two.
+
+src/agentaudit/evidence/selftest.py | The `noqa` strings here are TEST DATA, not suppressions of this repository's own checks. The self-test writes a throwaway file containing a suppression in order to prove that the waiver guard notices it, and then that a declaration covers it.

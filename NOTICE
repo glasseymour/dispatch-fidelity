@@ -1,0 +1,18 @@
+agentaudit
+Copyright 2026 Zoltan Varga
+
+This product includes software developed as part of the Dispatch Fidelity Benchmark,
+a pre-registered measurement of dispatch fidelity in multi-agent LLM orchestrations.
+
+  Varga, Z. "Who Validates the Validator? Instrument failure in the shape of the
+  hypothesis." Zenodo. https://doi.org/10.5281/zenodo.21812041
+  Pre-registration: OSF 4rgey
+
+The scoring rules in src/agentaudit/fidelity/scorer.py, the run-binding checks in
+src/agentaudit/fidelity/binding.py and the injection classes in src/agentaudit/inject/
+are derived from that deposit's code and its correction protocol. The comments in those
+files preserve the dated correction history, because a reader deciding whether to trust
+this instrument needs to see where it has already been wrong.
+
+Code in this repository is licensed under the Apache License, Version 2.0 (see LICENSE).
+Documentation under docs/ and README.md is licensed under CC BY 4.0.

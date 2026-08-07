@@ -1,0 +1,16 @@
+# WAIVERS — suppressions declared deliberate
+#
+# `verify.py` scans the codebase for skip, xfail, type-ignore, noqa, eslint-disable,
+# ts-ignore and focused tests (.only). Every file carrying one must be named here with a
+# written reason, or it is a finding.
+#
+# The point is not to forbid suppressions. The point is that a deliberate exception must
+# not look identical to an accident — which is exactly what an undeclared `@pytest.mark.skip`
+# does. A stale declaration is also a finding: it means the reason outlived the suppression.
+#
+# Copy to waivers.txt in the project root.
+#
+# Format:  path/relative/to/root | why the suppression is there and when it goes away
+#
+tests/test_network.py | Two tests skipped without a live Qdrant on :6333. They run in CI against the container; the skip exists so the local suite stays runnable offline.
+src/legacy_parser.py | noqa on the regex line: the pattern is intentionally long and splitting it changes the match. Removed when the parser is replaced (see issue #41).

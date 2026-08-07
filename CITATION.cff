@@ -1,0 +1,34 @@
+cff-version: 1.2.0
+title: "agentaudit: dispatch-fidelity auditing for agentic systems"
+message: "If you use this software, please cite the method deposit below."
+type: software
+authors:
+  - family-names: Varga
+    given-names: Zoltan
+    orcid: "https://orcid.org/0009-0003-1020-834X"
+repository-code: "https://github.com/glasseymour/agentaudit"
+license: Apache-2.0
+version: 0.1.0
+abstract: >-
+  A tool for measuring dispatch fidelity in agentic systems: whether a claim that a tool
+  was called corresponds to an execution that actually happened. Ground truth comes from
+  an out-of-band logging proxy with a per-run canary nonce committed before execution;
+  scoring is deterministic; a run-binding check proves the manifest and the tool log come
+  from the same run. Ships a fault-injection matrix so the instrument can be validated
+  before it is trusted.
+keywords:
+  - LLM agents
+  - multi-agent orchestration
+  - tool use
+  - audit
+  - fault injection
+  - reproducibility
+references:
+  - type: article
+    title: >-
+      Who Validates the Validator? Instrument failure in the shape of the hypothesis
+    authors:
+      - family-names: Varga
+        given-names: Zoltan
+    doi: 10.5281/zenodo.21812041
+    year: 2026

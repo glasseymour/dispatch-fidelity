@@ -1,0 +1,7 @@
+# One line ending in the repository, LF, on every platform. The tool digests working
+# trees and compares hashes, so a checkout that silently rewrites bytes would make the
+# same commit produce different digests on different machines.
+* text=auto eol=lf
+
+*.png binary
+*.zip binary

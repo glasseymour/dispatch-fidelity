@@ -1,0 +1,24 @@
+# ANCHORS — numbers fixed BEFORE the change
+#
+# An anchor is a commitment made while the answer was still unknown. Re-reading the
+# output just produced is not verification; comparing it against a value written down
+# earlier is. In the measurement this package derives from, a registered number caught
+# two errors that every aggregate metric showed as fine.
+#
+# Copy this file to ANCHOR.txt in the project root and edit. `verify.py` runs each
+# command and requires the expected value to appear in its output.
+#
+# Format:  name | command | expected substring
+#
+# Keep anchors few and load-bearing. An anchor nobody would notice breaking is noise;
+# an anchor that breaks on every legitimate change gets deleted within a week.
+
+test count      | python -m pytest --collect-only -q 2>&1 | tail -1  | tests collected
+tests green     | python -m pytest -q 2>&1 | tail -1                 | passed
+no failures     | python -m pytest -q 2>&1 | tail -1                 | 0 failed
+
+# Data-shaped anchors are the strongest kind — they break when the pipeline silently
+# changes shape, which is exactly what a green test suite will not tell you:
+#
+# row count       | python -c "import db; print(db.count())"          | 41399
+# schema columns  | python -c "import db; print(len(db.columns()))"   | 26

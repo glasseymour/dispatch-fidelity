@@ -1,0 +1,24 @@
+{
+  "_comment": [
+    "Stop-hook vazlat: minden befejezesnel lefuttatja a verify.py-t a projekt gyokerebol.",
+    "TELEPITES: az `update-config` skillen keresztul, NE kezzel szerkesztett settings.json-nal.",
+    "A hook-sema verziononkent valtozhat, es egy elrontott hook csendben kikapcsol —",
+    "ami pontosan az a hibaosztaly, amit ez a csomag mer: egy ellenorzes, ami nem tud elbukni.",
+    "",
+    "A verify.py 1-es exit koddal jelez leletet. A hook ezt a kimenetet adja vissza,",
+    "tehat a lelet a beszelgetesben lathato lesz, nem csak a naploban."
+  ],
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "py -3.12 C:/Data/CCode/agent-verify/verify.py"
+          }
+        ]
+      }
+    ]
+  }
+}
