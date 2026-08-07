@@ -1,20 +1,31 @@
 name: publish
 
-# Supply-chain release. The claim this workflow makes is narrow and checkable: the bytes
-# on PyPI, the bytes on the GitHub release, and the bytes the attestation covers are the
-# SAME bytes, built once, from this commit, by this workflow.
+# Supply-chain release. The claim: the bytes on PyPI, the bytes attached to the GitHub
+# release, and the bytes the attestation covers are the SAME bytes — built once, from
+# this tag, by this workflow.
 #
-# Built once is the load-bearing word. A pipeline that builds separately for each
-# destination publishes artifacts that were never compared, and "identical because the
-# build is deterministic" is a claim nobody ran. Everything downstream consumes one
-# uploaded artifact.
+# Built once is the load-bearing word. A pipeline that builds separately per destination
+# publishes artifacts that were never compared, and "identical because the build is
+# deterministic" is a claim nobody ran.
 #
-# `workflow_dispatch` is here because v0.3.0 shipped before this workflow did.
+# TRIGGERED BY THE TAG, NOT BY A PUBLISHED RELEASE. The earlier version ran on
+# `release: published` and then uploaded assets with `--clobber`, which is backwards
+# twice over: it mutates a reference point that already exists, and it cannot work at all
+# once immutable releases are enabled, since a published release refuses new assets. The
+# release is now CREATED complete, from artifacts that were built, verified and attested
+# first.
+#
+# Actions are pinned to commit SHAs. A moving major tag means the workflow that built a
+# release cannot be reconstructed from the record of it.
 
 on:
-  release:
-    types: [published]
+  push:
+    tags: ["v*"]
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to build and publish (e.g. v0.3.0)"
+        required: true
 
 permissions:
   contents: read
@@ -22,14 +33,13 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    outputs:
-      sha256: ${{ steps.sums.outputs.list }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
         with:
-          fetch-depth: 0            # tags, so the source archive is identifiable
+          ref: ${{ inputs.tag || github.ref }}
+          fetch-depth: 0
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5
         with:
           python-version: "3.12"
 
@@ -38,35 +48,44 @@ jobs:
           python -m pip install --upgrade build
           python -m build
 
-      # Prove the shipped wheel works FROM ITSELF, not from the source tree beside it.
-      # A package that was only ever exercised in its own checkout is the packaging
-      # version of a documented check nobody executes — this project has finding numbers
-      # for that shape.
-      - name: Verify the built wheel in a clean environment
+      # TWO environments, deliberately. The verification environment needs pytest and
+      # therefore contains packages the released wheel does not depend on; an SBOM taken
+      # from it and attested to the wheel would assert a dependency set the wheel does
+      # not have. So the SBOM comes from a runtime-only install, and the test tooling
+      # lives somewhere the attestation never sees. The runtime SBOM is nearly empty,
+      # which is the point: no runtime dependencies.
+      - name: Runtime environment (the one the SBOM describes)
         run: |
-          python -m venv /tmp/clean
-          /tmp/clean/bin/pip install --quiet dist/*.whl pytest
-          /tmp/clean/bin/dispatch-audit selftest --with-evidence
-          /tmp/clean/bin/dispatch-audit demo
-          /tmp/clean/bin/python -m pytest tests -q
+          python -m venv /tmp/runtime
+          /tmp/runtime/bin/pip install --quiet dist/*.whl
+          /tmp/runtime/bin/dispatch-audit selftest
+          /tmp/runtime/bin/dispatch-audit demo
 
-      - name: SBOM
+      - name: SBOM of the runtime environment only
         run: |
           python -m pip install --quiet cyclonedx-bom
-          /tmp/clean/bin/python -m pip install --quiet cyclonedx-bom
-          /tmp/clean/bin/cyclonedx-py environment /tmp/clean \
+          python -m cyclonedx_py environment /tmp/runtime \
             --output-format JSON --outfile dist/sbom.cyclonedx.json
-          echo "SBOM describes the ENVIRONMENT the verified wheel was installed into."
+          python - <<'PY'
+          import json
+          bom = json.load(open("dist/sbom.cyclonedx.json"))
+          names = sorted(c.get("name", "") for c in bom.get("components", []))
+          print("SBOM components:", names)
+          assert "pytest" not in names, "test tooling leaked into the attested SBOM"
+          PY
+
+      # Verification environment: separate, so its extras cannot reach the SBOM.
+      - name: Verify the built wheel against the full suite
+        run: |
+          python -m venv /tmp/verify
+          /tmp/verify/bin/pip install --quiet dist/*.whl pytest
+          /tmp/verify/bin/dispatch-audit selftest --with-evidence
+          /tmp/verify/bin/python -m pytest tests -q
 
       - name: Checksums
-        id: sums
-        run: |
-          cd dist && sha256sum * | tee SHA256SUMS.txt
-          echo "list<<EOF" >> "$GITHUB_OUTPUT"
-          cat SHA256SUMS.txt >> "$GITHUB_OUTPUT"
-          echo "EOF" >> "$GITHUB_OUTPUT"
+        run: cd dist && sha256sum *.whl *.tar.gz *.json | tee SHA256SUMS.txt
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         with:
           name: dist
           path: dist/
@@ -79,33 +98,40 @@ jobs:
       attestations: write
       contents: read
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4
         with:
           name: dist
           path: dist/
-      - name: Build provenance for the distributions
-        uses: actions/attest-build-provenance@v2
+      - uses: actions/attest-build-provenance@96b4a1ef7235a096b17240c259729fdd70c83d45  # v2
         with:
           subject-path: "dist/*.whl,dist/*.tar.gz"
-      - name: Attest the SBOM
-        uses: actions/attest-sbom@v2
+      - uses: actions/attest-sbom@10926c72720ffc3f7b666661c8e55b1344e2a365  # v2
         with:
           subject-path: "dist/*.whl"
           sbom-path: "dist/sbom.cyclonedx.json"
 
   github_release:
     needs: [build, attest]
-    if: github.event_name == 'release'
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4
         with:
           name: dist
           path: dist/
-      - name: Attach the same bytes to the release
-        run: gh release upload "${{ github.event.release.tag_name }}" dist/* --clobber
+      # Create complete, or attach to a draft. Never --clobber: replacing an asset on a
+      # published release rewrites something a checksum may already refer to.
+      - name: Publish the release with its artifacts
+        run: |
+          TAG="${{ inputs.tag || github.ref_name }}"
+          if gh release view "$TAG" --json isDraft --jq .isDraft 2>/dev/null | grep -qx false; then
+            echo "::error::$TAG is already published. Assets are not replaced on a live"
+            echo "::error::release; cut a new tag instead."
+            exit 1
+          fi
+          gh release create "$TAG" dist/* --title "$TAG" --generate-notes --verify-tag \
+            || gh release upload "$TAG" dist/*
         env:
           GH_TOKEN: ${{ github.token }}
 
@@ -114,12 +140,12 @@ jobs:
     runs-on: ubuntu-latest
     environment: pypi            # configure the trusted publisher against this environment
     permissions:
-      id-token: write            # the OIDC token PyPI checks; no long-lived secret exists
+      id-token: write            # OIDC; no long-lived token exists in this repository
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4
         with:
           name: dist
           path: dist/
-      - name: Keep only the distributions PyPI accepts
+      - name: Keep only what PyPI accepts
         run: rm -f dist/SHA256SUMS.txt dist/sbom.cyclonedx.json
-      - uses: pypa/gh-action-pypi-publish@release/v1
+      - uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33  # v1.14.2

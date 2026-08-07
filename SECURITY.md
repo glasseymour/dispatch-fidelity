@@ -54,10 +54,20 @@ that drags in a dependency tree is a bigger attack surface than the thing it mea
 
 ## Releases
 
-Artifacts are built in CI, verified from the built wheel in a clean environment before
-publication, and their SHA-256 checksums are published in the GitHub release notes.
-Distribution to PyPI uses Trusted Publishing, so no long-lived token exists in this
-repository.
+**v0.3.0, the current release.** Built locally, verified from the built wheel in a clean
+environment, and published with SHA-256 checksums in the release notes. The tag is
+annotated and **unsigned**. There is no build attestation and no SBOM. This is stated in
+the past tense because it is what happened.
+
+**From v0.3.1.** `.github/workflows/publish.yml` builds once from the tag, verifies the
+wheel from itself, produces a CycloneDX SBOM of a runtime-only environment, attaches
+Sigstore build-provenance and SBOM attestations, then creates the release and publishes to
+PyPI from the same artifact. Tags will be signed. PyPI uses Trusted Publishing, so no
+long-lived token exists in this repository.
+
+**That workflow has never run.** It is a plan in version control, not a property of any
+artifact you can download today. Do not treat provenance described there as covering
+v0.3.0.
 
 ## Supported versions
 

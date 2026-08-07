@@ -13,13 +13,13 @@ your logs says otherwise, because nothing went wrong; something simply never hap
 agent cannot reach.
 
 ```bash
-pip install git+https://github.com/glasseymour/dispatch-fidelity
+pip install https://github.com/glasseymour/dispatch-fidelity/releases/download/v0.3.0/dispatch_fidelity-0.3.0-py3-none-any.whl
 dispatch-audit demo
 ```
 
-*(Not on PyPI yet — this line will become `pip install dispatch-fidelity` when it is.
-Leaving an install command that does not work on a project about claims that do not hold
-up seemed like the wrong first impression.)*
+*(Not on PyPI yet. This installs the **released wheel** — the exact bytes covered by the
+software DOI and the published checksum. `git+…` would build whatever `main` happens to
+be, which is a different artifact carrying the same version number; see finding #28.)*
 
 The demo runs three scripted agents offline — no key, no network, no model.
 
@@ -140,10 +140,10 @@ gate. Treat exit 2 as "this run tells you nothing", not as "this run is fine".
 dispatch-audit selftest
 ```
 
-Twenty-six cases, and both halves matter:
+Twenty-eight cases, and both halves matter:
 
 ```
-  sensitivity : 15/15   deliberate defects caught
+  sensitivity : 17/17   deliberate defects caught
   specificity : 11/11   harmless variations left alone
 ```
 
@@ -284,8 +284,12 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 **The software** — which bytes you ran:
 
-> Varga, Z. *dispatch-fidelity: dispatch-fidelity auditing for agentic systems.* Zenodo.
-> https://doi.org/10.5281/zenodo.21841082 (concept DOI, resolves to the latest version)
+> Varga, Z. *dispatch-fidelity v0.3.0: dispatch-fidelity auditing for agentic systems.*
+> Zenodo. https://doi.org/10.5281/zenodo.21841083
+>
+> Version DOI, because "which bytes you ran" is a question about one release. The concept
+> DOI `10.5281/zenodo.21841082` resolves to the **latest** version and belongs in a
+> sentence about the project, not about a result.
 
 **The method** — what is measured and how it was validated:
 

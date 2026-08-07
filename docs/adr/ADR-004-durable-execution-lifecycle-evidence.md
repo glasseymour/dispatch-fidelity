@@ -20,16 +20,27 @@ ran. That assumption has never been examined, and it does not hold.
 hard kill between the side effect and the append leaves an executed call **with no trace
 at all**.
 
-The direction of the resulting error is worth stating precisely, because it decides how
-urgent this is. If the log line is lost and the report still names the call, the scorer
-returns `FABRICATED` — a **false accusation**, not a false clean bill. If the whole
-process dies, there is no report to score. A partially written log has been
-`INCONCLUSIVE` since findings #20 and #24.
+**The direction of the resulting error — corrected 2026-08-08.** An earlier draft of
+this ADR said the failure mode is a *false accusation*: the log line is lost, the report
+still names the call, the scorer returns `FABRICATED`. That is true only in the narrow
+case of a single process whose report survives, and the draft stated it without the
+condition. It generalised an unsupported claim from a review source — the shape this
+whole protocol exists to catch — and a second review caught it.
 
-So at the level of the *verdict*, the gap is closed. At the level of the *record* it is
-not, and the two are not the same thing: a run whose evidence is missing a call is not a
-run about which nothing is wrong. This is a correctness item, and it is the only one on
-the 0.4 list — `async_call`, typed canonicalisation and a signed chain are scaling.
+The real exposure is a **false clearance**:
+
+- A worker dies after the side effect but before both the log write and its reply. The
+  orchestrator survives and reports on what it received. The call appears **nowhere** —
+  not in the log, not in the report — and the run can be `PASS` **with a side effect that
+  happened**.
+- Sharper still, with a retry: the lost first attempt's side effect occurred, the second
+  attempt is logged, the report shows one successful call, the verdict is clean, and the
+  operation ran **twice**.
+
+So the gap is not closed at the verdict level either, and the urgency argument that
+deferred this work loses its main support. The sequencing still holds, but for a weaker
+and more honest reason: the wire format must not be designed against this repository's
+own harness. `async_call`, typed canonicalisation and a signed chain remain scaling.
 
 ## Why an ADR before code
 
@@ -71,6 +82,31 @@ every result and converts every exception to `ERROR:<type>` — an observer effe
 alters the system being measured, and one that finding #16's rule now depends on. The
 replacement records the *typed* result and the *original* exception, and derives the
 error classification for scoring rather than substituting it into the return path.
+
+### I7 — the measurement-plane axiom
+
+This one is not a property of the event system; it is how the whole system behaves when
+the measurement itself becomes uncertain. I1–I6 govern the record. I7 governs what the
+absence of a record is allowed to mean.
+
+> **No loss of measurement capability may be represented as the absence of a finding.**
+> Recorder failure is an explicit evidence state, and it must reach both the human verdict
+> and the machine gate.
+
+Shorter: **the absence of measurement cannot be encoded as the absence of a defect.**
+
+This is the abstract shape of four findings already fixed:
+
+| # | what was missing | what it used to produce |
+|---|---|---|
+| #18 | no measurable claim | `PASS` |
+| #20 | part of the log unreadable | `PASS` |
+| #24 | damaged evidence | a wrong `FAIL` |
+| #25 | binding never run | `PASS` |
+
+Three collapsed into the benign state and one into the accusing state. Both directions
+are the same error: an empty place in the evidence being read as a value. Downstream
+systems default it to zero, and zero looks like nothing wrong.
 
 **I7 — Recorder failure is visible.** If the recorder cannot write, the run does not
 silently become "unaudited but successful". It fails, or it is marked `INCONCLUSIVE`.

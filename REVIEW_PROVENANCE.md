@@ -26,6 +26,7 @@ published.
 | #17–#23 | OpenAI GPT-5.6 Pro via ChatGPT | 2026-08-07 | Zoltán Varga | #17–#22 accepted and fixed; #23 accepted as a documented trade-off, rule unchanged and now version-tagged |
 | #24 | Anthropic Claude Opus 5 | 2026-08-07 | Zoltán Varga | accepted, fixed |
 | #25 | OpenAI GPT-5.6 Pro via ChatGPT | 2026-08-07 | Zoltán Varga | accepted, fixed |
+| #27, #28 | OpenAI GPT-5.6 Pro via ChatGPT | 2026-08-08 | Zoltán Varga | accepted, fixed |
 
 **Numbering collision, resolved.** Two reviews independently reached the same area and
 both assigned `#24`. Claude Opus 5 used it for the torn-log-with-manifest path, found on
@@ -39,6 +40,40 @@ measuring this project's own convenience wiring rather than the command a user r
 handed `decide()` a binding computed from the *intact* log while corrupting only the copy
 the scorer saw, so the CLI path — where the damaged log goes into both — was never
 covered. `G5` and `G6` close that.
+
+## When a review source was wrong
+
+**2026-08-08 — the crash-window error direction, in ADR-004.**
+
+Claude Opus 5 stated that the failure mode of the proxy's crash window is a *false
+accusation*: the log line is lost, the report still names the call, the scorer returns
+`FABRICATED`. The claim was accepted and written into ADR-004, where it carried an
+argument about urgency — the gap is unpleasant but does not produce a false clean bill,
+so the work could wait.
+
+The claim was true only for a single process whose report survives, and it was stated
+without that condition. GPT-5.6 Pro found the general case: a worker that dies after the
+side effect but before both the log write and its reply leaves a call in **neither** the
+log nor the report, so the run can be `PASS` with a side effect that happened. With a
+retry it is sharper still — the lost attempt ran, the second is logged, the report shows
+one call, and the operation executed twice. That is a false clearance, and it is the
+failure class this instrument exists to catch.
+
+Two things follow, and both are recorded rather than quietly absorbed.
+
+The ADR carried **an unsupported generalisation from a review source**, in a document
+whose purpose is to fix invariants — the same shape as the fifteen findings in the method
+deposit, arriving through the review channel instead of the code. The correction is dated
+in the ADR text itself, not applied silently.
+
+And the sequencing argument it supported partly collapsed. Deferring the durable-lifecycle
+work behind real integrations is still the right call, but no longer because the gap is
+harmless. The remaining reason is narrower and more honest: an event format must not be
+designed against this repository's own harness, because earlier logs age with it.
+
+This is the first entry in this register where a review source was wrong. It belongs here
+more than the findings do. A provenance file that only records hits describes an oracle,
+and the whole argument for naming these sources precisely is that they are not one.
 
 ## Naming
 

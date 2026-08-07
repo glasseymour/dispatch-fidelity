@@ -10,9 +10,61 @@ at 1 here would make the tool look younger than its error history.
 
 ## Unreleased
 
-- Install instructions point at the git URL until the package is on PyPI. The README
-  previously said `pip install dispatch-fidelity`, which did not work.
-- Release plumbing: PyPI Trusted Publishing workflow, `.zenodo.json`, `SECURITY.md`.
+### Finding #27 — the README and the anchors disagreed, and the gate saw only one
+
+`ANCHOR.txt` said `sensitivity : 17/17`; the README said `15/15` and "twenty-six cases".
+The anchor matches what the tool prints, so `dispatch-audit verify` stayed green while the
+front page of the project was wrong.
+
+This is #17's shape on a documentation surface: **the machine gate was not looking at what
+the human reads.** Correcting the two numbers would have fixed nothing, so the fix is
+`tests/test_release_facts.py` — the figures quoted in prose are now re-derived from the
+matrix that produces them, and the README and `ANCHOR.txt` cannot disagree.
+
+Same file, same family: `CITATION.cff` carried the **concept** DOI beside a fixed
+`version: 0.3.0`, and the README put the concept DOI under the words "which bytes you
+ran". A concept DOI resolves to the latest version by definition, so in six months both
+would identify a different artifact while still claiming to describe this one. Version DOI
+in both places; the concept DOI belongs in a sentence about the project.
+
+### Finding #28 — the install line built a moving target
+
+`pip install git+…/dispatch-fidelity` builds whatever `main` happens to be — two commits
+past the tag, with `pyproject.toml` still reading `0.3.0`. Two different byte sets under
+one version number, which is precisely what the software DOI exists to prevent. The README
+now installs the **released wheel**, and a test refuses any install line pointing at a
+branch.
+
+### Numbering
+
+These are **#27 and #28**, not #26. Correction #26 is the deposit's release-gate fix,
+published yesterday in Zenodo v3 under `10.5281/zenodo.21840553` — a permanent record. The
+same collision as #24 on 2026-08-07, except one side is now immutable, so arrival order
+does not decide it: the published number wins. Recorded in
+[REVIEW_PROVENANCE.md](REVIEW_PROVENANCE.md).
+
+### Also
+
+- **`publish.yml` restructured.** Triggered by the tag, not by a published release, and it
+  creates the release complete instead of uploading with `--clobber`. Both were backwards
+  under immutable releases, which refuse new assets on a live release. Actions pinned to
+  commit SHAs: a moving major tag means the workflow that built a release cannot be
+  reconstructed from the record of it.
+- **The SBOM now describes a runtime-only environment.** It was taken from the
+  verification venv, which contains `pytest` and the SBOM tool itself, and then attested
+  **to the wheel** — asserting a dependency set the wheel does not have. Two environments
+  now, with an assertion that test tooling has not leaked into the attested one. The
+  runtime SBOM is nearly empty, which is the point.
+- **`SECURITY.md` no longer describes the pipeline in the present tense.** It had never
+  run. It now says what happened for v0.3.0, what will happen from v0.3.1, and states
+  plainly that the workflow is a plan in version control rather than a property of any
+  downloadable artifact.
+- **ADR-004's crash-window claim corrected**, dated in the text. The earlier direction —
+  "false accusation, not false clearance" — held only for a single surviving process.
+  See the provenance file: it is the first recorded case of a review source being wrong.
+- **I7 raised to a measurement-plane axiom** in ADR-004: *the absence of measurement
+  cannot be encoded as the absence of a defect.* It is the abstract shape of #18, #20, #24
+  and #25.
 
 **Software DOI for v0.3.0: `10.5281/zenodo.21841083`** (concept
 `10.5281/zenodo.21841082`). Created by hand, because the release predates the
