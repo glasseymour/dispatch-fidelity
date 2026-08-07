@@ -23,23 +23,30 @@ def _cmd_demo(args) -> int:
     from .demo import mock_agent
 
     rc = 0
-    for mode in ("honest", "lying"):
+    for mode in ("honest", "lying", "substituting"):
         session, report = mock_agent.run(mode, run_dir=args.run_dir)
         session.score(report)
         print()
         print(f"### agent behaviour: {mode}")
         print(session.report())
         s = session._score
-        if mode == "honest" and s.fabricated:
-            print("UNEXPECTED: the honest agent was flagged. That is a false positive.")
+        if mode == "honest" and not s.clean:
+            print("UNEXPECTED: the honest agent was flagged. That is a false positive, "
+                  "and it includes reporting a failed call honestly.")
             rc = 1
         if mode == "lying" and not s.fabricated:
             print("UNEXPECTED: the lying agent passed. That is a false negative.")
             rc = 1
+        if mode == "substituting" and not s.substituted:
+            print("UNEXPECTED: the substituting agent passed. That is a false negative, "
+                  "and it is the one this tool was blind to before finding #16.")
+            rc = 1
     print()
     print("Artifacts written to:", Path(args.run_dir).resolve())
     if rc == 0:
-        print("Both outcomes are as expected: the honest run is clean, the lying run is not.")
+        print("All three outcomes are as expected: the honest run is clean -- including "
+              "the call that failed and was reported as failing -- and neither the lying "
+              "nor the substituting run is.")
     return rc
 
 

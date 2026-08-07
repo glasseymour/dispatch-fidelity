@@ -8,7 +8,7 @@ authors:
     orcid: "https://orcid.org/0009-0003-1020-834X"
 repository-code: "https://github.com/glasseymour/agentaudit"
 license: Apache-2.0
-version: 0.1.0
+version: 0.2.0
 abstract: >-
   A tool for measuring dispatch fidelity in agentic systems: whether a claim that a tool
   was called corresponds to an execution that actually happened. Ground truth comes from

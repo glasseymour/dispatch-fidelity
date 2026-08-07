@@ -28,7 +28,7 @@ from .fidelity import (
     score,
 )
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 __all__ = [
     "AuditSession", "LoggingProxy", "CanaryTools", "DispatchScore", "Verdict",
     "BindingResult", "check_binding", "score", "extract_claims", "__version__",

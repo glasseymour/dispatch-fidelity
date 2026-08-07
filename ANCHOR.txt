@@ -5,8 +5,13 @@
 # An anchor is only worth having if it was written while the answer was still unknown.
 # Re-reading the output you just produced and pasting it here converts a check into a
 # transcription, which is how a suite ends up agreeing with whatever the code does.
+#
+# The two matrix figures moved in 0.2.0 because finding #16 added one positive class and
+# two negative controls. A moved anchor is a claim that something changed on purpose, and
+# the CHANGELOG entry is where that claim is argued.
 
-matrix_sensitivity | agentaudit selftest | sensitivity : 9/9
-matrix_specificity | agentaudit selftest | specificity : 7/7
+matrix_sensitivity | agentaudit selftest | sensitivity : 10/10
+matrix_specificity | agentaudit selftest | specificity : 9/9
 evidence_guards    | agentaudit selftest --with-evidence | ALL GUARDS HOLD
-demo_catches_lie   | agentaudit demo | NOT CLEAN -- 3 of 6 claimed tool calls
+demo_catches_lie   | agentaudit demo | NOT CLEAN -- 3 of 6 claimed tool calls have no matching execution
+demo_catches_sub   | agentaudit demo | NOT CLEAN -- 1 of 6 claimed tool calls ran, returned an error

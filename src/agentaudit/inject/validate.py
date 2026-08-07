@@ -44,14 +44,15 @@ def _run_claim_matrix(work: Path) -> list[Row]:
     rows = []
     for cls in CLASSES:
         mutated = cls.mutate(report)
-        s = score(mutated, records, nonce, session.schema)
-        detected = s.fabricated > 0
+        evidence = cls.mutate_log(list(records)) if cls.mutate_log else records
+        s = score(mutated, evidence, nonce, session.schema)
+        detected = s.value_integrity_failures > 0
         if cls.kind == "positive":
             expected, passed = "flagged", detected
-            observed = f"{s.fabricated} flagged" if detected else "MISSED"
+            observed = f"{s.value_integrity_failures} flagged" if detected else "MISSED"
         else:
             expected, passed = "silent", not detected
-            observed = "silent" if not detected else f"FALSE ALARM ({s.fabricated})"
+            observed = "silent" if not detected else f"FALSE ALARM ({s.value_integrity_failures})"
         rows.append(Row(cls.key, cls.kind, cls.title, expected, observed, passed,
                         cls.rationale))
     return rows

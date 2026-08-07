@@ -15,10 +15,17 @@ pip install agentaudit
 agentaudit demo
 ```
 
-The demo runs two scripted agents offline — no key, no network, no model. One reports
-honestly and comes back clean. One fabricates three claims and gets caught, with each
-fabrication printed in full. If a tool is going to tell you your system is fine, you
-should first watch it tell you when something is not.
+The demo runs three scripted agents offline — no key, no network, no model.
+
+| Agent | Result |
+|---|---|
+| **honest** | calls everything it reports, and reports the one call that *failed* as a failure → CLEAN |
+| **lying** | adds three claims for calls it never made → each one printed in full |
+| **substituting** | calls everything it reports, then writes a plausible number in place of an error → caught |
+
+The third is the quiet one. Every dispatch claim it makes is true, and the report reads
+perfectly. If a tool is going to tell you your system is fine, you should first watch it
+tell you when something is not.
 
 ---
 
@@ -88,6 +95,18 @@ inject a canary, because inventing a tool inside a relay would change the toolse
 server advertises. For canary coverage, add one to the server or use the in-process
 session.
 
+**If you write your own canary, the receipt format is a contract.** The binding check
+recovers the nonce with the pattern `CANARY[label]:<hex>`. A canary returning the value
+in any other shape makes B3 report `unprovable` — correct, and easy to miss if you did
+not know the format mattered. Match the pattern, or pass your own:
+
+```python
+check_binding(manifest, log, nonce_pattern=r"my-canary=([0-9a-f]{16,})")
+```
+
+Artifacts are written to `audit_runs/` in the current working directory by default; pass
+`run_dir=` to put them elsewhere.
+
 ### Scoring artifacts you already have
 
 ```bash
@@ -104,16 +123,17 @@ Exit code 1 when anything is fabricated or the binding fails, so it drops into C
 agentaudit selftest
 ```
 
-Sixteen cases, and both halves matter:
+Nineteen cases, and both halves matter:
 
 ```
-  sensitivity : 9/9   deliberate defects caught
-  specificity : 7/7   harmless variations left alone
+  sensitivity : 10/10   deliberate defects caught
+  specificity :   9/9   harmless variations left alone
 ```
 
 The positives are the defects: an invented call, an altered argument, a forged receipt,
 a receipt too short to be evidence, swapped argument values, a phantom tool, one
-execution reported as two, and two splice classes that cross artifacts between real runs.
+execution reported as two, a value invented for a call that errored, and two splice
+classes that cross artifacts between real runs.
 
 **The negatives are the half most tools never publish.** A renamed parameter key. A
 receipt reported with extra whitespace. Hex in upper case. A receipt truncated to exactly
@@ -151,12 +171,28 @@ found in the original study's own tooling.
 
 ## What this measures, and what it does not
 
-**It measures** whether a claimed tool call corresponds to a logged execution, and
-whether the evidence for a run holds together.
+**It measures** three things:
 
-**It does not measure** whether the tool returned the right answer, whether the agent's
-reasoning was sound, or whether the task was completed well. A perfectly faithful agent
-can be perfectly wrong.
+1. whether a claimed tool call corresponds to a logged execution — `FABRICATED`
+2. whether a call that ran and **failed** was reported as having produced a value —
+   `SUBSTITUTED`
+3. whether the evidence for a run holds together — the binding checks
+
+**It does not measure** whether a successful tool returned the *right* answer, whether
+the agent's reasoning was sound, or whether the task was completed well. A perfectly
+faithful agent can be perfectly wrong.
+
+That boundary is narrower than it sounds, and an earlier version of this README drew it
+in the wrong place. It said only "it does not measure whether the tool returned the right
+answer", which reads as covering the case where a tool errors and the agent writes a
+plausible number instead. It does not cover it, and the tool was blind to it: every
+dispatch claim is true, argument matching succeeds, and the run came back **CLEAN**.
+
+That is a dispatch-fidelity question, not a correctness one — the agent reported a value
+**the execution never produced**. In the source measurement it accounted for 18 cases,
+**19.8% of all errored calls**, and no injection probe was looking for it. It is now
+finding #16, class `P8`, with two negative controls beside it. See
+[CHANGELOG.md](CHANGELOG.md).
 
 **The boundary worth stating plainly:** where the signer and the runner are the same
 party, provenance is complete against accidental mixing and after-the-fact modification,

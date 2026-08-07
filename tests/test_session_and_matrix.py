@@ -15,7 +15,7 @@ from agentaudit.inject import validate
 def test_honest_run_is_clean(tmp_path):
     session, report = mock_agent.run("honest", run_dir=tmp_path)
     s = session.score(report)
-    assert s.fabricated == 0 and s.claimed == 5
+    assert s.fabricated == 0 and s.substituted == 0 and s.claimed == 6
     assert session.binding.bound
 
 
@@ -51,4 +51,22 @@ def test_validation_matrix_is_fully_green():
     rows, ok = validate.run(verbose=False)
     failed = [r.key for r in rows if not r.passed]
     assert ok, f"validation matrix regressions: {failed}"
-    assert len(rows) == 16
+    assert len(rows) == 19
+
+
+def test_substituting_run_is_caught(tmp_path):
+    """Finding #16. Every dispatch claim is true; one value was never produced."""
+    session, report = mock_agent.run("substituting", run_dir=tmp_path)
+    s = session.score(report)
+    assert s.fabricated == 0          # it really did call everything it reported
+    assert s.substituted == 1
+    assert not s.clean
+    assert "SUBSTITUTED" in session.report()
+
+
+def test_an_honestly_reported_failure_stays_clean(tmp_path):
+    """The negative control that has to ship with #16, or specificity breaks."""
+    session, report = mock_agent.run("honest", run_dir=tmp_path)
+    assert "ERROR:ValueError" in report
+    s = session.score(report)
+    assert s.substituted == 0 and s.clean

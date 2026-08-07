@@ -35,6 +35,13 @@ from pathlib import Path
 from .nonce import load_manifest
 from .proxy import load_log
 
+# THE CANARY RECEIPT FORMAT IS A CONTRACT, not an implementation detail. B3 recovers
+# the plaintext nonce by reading it out of a receipt, so a canary that returns the value
+# in some other shape leaves the binding silently `unprovable` -- correctly reported, and
+# easy to miss if you did not know the format mattered. Anyone writing their own canary
+# (which is the normal case behind an MCP relay) must either match this pattern or pass
+# their own via `nonce_pattern`. Documented in README and docs/method.md after external
+# review, 2026-08-07.
 NONCE_RE = re.compile(r"CANARY\[[^\]]*\]:([0-9a-f]{16,})")
 
 
@@ -57,20 +64,26 @@ class BindingResult:
                 "bound": self.bound}
 
 
-def recover_nonce(log_records: list[dict]) -> str | None:
+def recover_nonce(log_records: list[dict], nonce_pattern=None) -> str | None:
     """Pull the plaintext nonce out of a canary receipt in the log.
 
     Only `canary_probe` returns it verbatim; a run that used the checksum canary alone
     leaves B3 unprovable, which is reported rather than hidden.
+
+    `nonce_pattern` accepts a compiled regex whose first group is the nonce, for canaries
+    that use a different receipt shape.
     """
+    rx = nonce_pattern or NONCE_RE
+    if isinstance(rx, str):
+        rx = re.compile(rx)
     for rec in log_records:
-        m = NONCE_RE.search(str(rec.get("result", "")))
+        m = rx.search(str(rec.get("result", "")))
         if m:
             return m.group(1)
     return None
 
 
-def check_binding(manifest_path: Path, log_path: Path) -> BindingResult:
+def check_binding(manifest_path: Path, log_path: Path, nonce_pattern=None) -> BindingResult:
     manifest_path, log_path = Path(manifest_path), Path(log_path)
     manifest = load_manifest(manifest_path)
     records = load_log(log_path)
@@ -92,15 +105,17 @@ def check_binding(manifest_path: Path, log_path: Path) -> BindingResult:
         r.findings.append("B2: tool log sequence numbers have gaps or repeats")
 
     committed = str(manifest.get("nonce_sha256", ""))
-    recovered = recover_nonce(records)
+    recovered = recover_nonce(records, nonce_pattern)
     if not committed:
         r.checks["B3_nonce_commitment"] = None
         r.unprovable.append("B3: the manifest carries no nonce commitment")
     elif recovered is None:
         r.checks["B3_nonce_commitment"] = None
         r.unprovable.append(
-            "B3: no canary receipt in the log, so the nonce cannot be recovered -- "
-            "UNPROVEN, which is a different claim from unsound"
+            "B3: no recoverable canary receipt in the log, so the nonce cannot be "
+            "recovered -- UNPROVEN, which is a different claim from unsound. If this run "
+            "DID call a canary, check its receipt format: B3 reads the nonce with the "
+            "pattern CANARY[label]:<hex>, and a custom canary needs `nonce_pattern`"
         )
     else:
         ok = hashlib.sha256(recovered.encode()).hexdigest() == committed

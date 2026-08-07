@@ -69,6 +69,17 @@ pre-run commitment that would make the binding cryptographic rather than label-l
 receipt no execution produced. Read the printed case; the argument list usually tells you
 whether the agent invented the call or misremembered a real one.
 
+**SUBSTITUTED** — the call ran, returned an error, and the report carries a value in its
+place. Read this one differently from a fabrication. The agent did the work; it had no
+true option in the report schema and chose the plausible one. Before treating it as a
+truthfulness problem, check whether your schema offers a legal way to say *"it ran and it
+failed"*. If it offers only a value or `MISSING`, the schema is doing the steering, and
+adding an `error` branch usually removes most of the class.
+
+Keep the two counts apart when you report them. `fabricated` means dispatch fabrication,
+which is what the registered 0.80% figure refers to; `value_integrity_failures` is the
+wider sum, and it is not comparable to that number.
+
 **Binding FAILED** — the manifest and the log do not come from the same run. In a normal
 workflow this means an artifact got copied, moved or overwritten, and the run should be
 discarded rather than debugged. Every claim in it may be correct and none of it is
