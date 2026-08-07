@@ -13,9 +13,13 @@ your logs says otherwise, because nothing went wrong; something simply never hap
 agent cannot reach.
 
 ```bash
-pip install dispatch-fidelity
+pip install git+https://github.com/glasseymour/dispatch-fidelity
 dispatch-audit demo
 ```
+
+*(Not on PyPI yet — this line will become `pip install dispatch-fidelity` when it is.
+Leaving an install command that does not work on a project about claims that do not hold
+up seemed like the wrong first impression.)*
 
 The demo runs three scripted agents offline — no key, no network, no model.
 
@@ -275,6 +279,21 @@ real fabrication, or flag a faithful agent, open an issue with the artifacts —
 new row in the validation matrix, and every row there started as somebody's objection.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Citing
+
+**The software** — which bytes you ran:
+
+> Varga, Z. *dispatch-fidelity: dispatch-fidelity auditing for agentic systems.* Zenodo.
+> https://doi.org/10.5281/zenodo.21841082 (concept DOI, resolves to the latest version)
+
+**The method** — what is measured and how it was validated:
+
+> Varga, Z. *Who Validates the Validator? Instrument failure in the shape of the
+> hypothesis.* Zenodo. https://doi.org/10.5281/zenodo.21812041
+
+Cite both if you used the tool to produce a result. They answer different questions, and
+a reader checking your number needs each of them.
 
 ## License
 

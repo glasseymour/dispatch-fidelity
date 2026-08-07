@@ -9,6 +9,14 @@ authors:
 repository-code: "https://github.com/glasseymour/dispatch-fidelity"
 license: Apache-2.0
 version: 0.3.0
+doi: 10.5281/zenodo.21841082
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.21841082
+    description: Concept DOI for the software; always resolves to the latest version
+  - type: doi
+    value: 10.5281/zenodo.21841083
+    description: Version DOI for v0.3.0
 abstract: >-
   A tool for measuring dispatch fidelity in agentic systems: whether a claim that a tool
   was called corresponds to an execution that actually happened. Ground truth comes from

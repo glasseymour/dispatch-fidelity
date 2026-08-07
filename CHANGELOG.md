@@ -8,6 +8,23 @@ The reason for one shared sequence: a finding about the instrument is a finding 
 instrument, whether it lands in a research harness or in a package. Restarting the count
 at 1 here would make the tool look younger than its error history.
 
+## Unreleased
+
+- Install instructions point at the git URL until the package is on PyPI. The README
+  previously said `pip install dispatch-fidelity`, which did not work.
+- Release plumbing: PyPI Trusted Publishing workflow, `.zenodo.json`, `SECURITY.md`.
+
+**Software DOI for v0.3.0: `10.5281/zenodo.21841083`** (concept
+`10.5281/zenodo.21841082`). Created by hand, because the release predates the
+Zenodo–GitHub integration. This reverses a call made earlier the same day: the argument
+against it was that a manual record opens a second hand-maintained path, which correction
+#26 had just closed. It does not — it is a one-off backfill, and later releases are
+archived automatically as new versions of this same concept series. The reason to have it
+is that the method DOI and the software DOI answer different questions: what is measured
+and how it was validated, versus exactly which bytes somebody ran.
+
+Method deposit, citable throughout: `10.5281/zenodo.21812041`.
+
 ## 0.3.0 — 2026-08-07
 
 **Every finding in this release is the same shape: the screen said one thing and the exit

@@ -1,11 +1,15 @@
 name: publish
 
-# PyPI Trusted Publishing: no token lives in this repository, and none has to. PyPI
-# verifies the workflow identity directly, so the credential that would otherwise sit in
-# a secret does not exist to be leaked.
+# Supply-chain release. The claim this workflow makes is narrow and checkable: the bytes
+# on PyPI, the bytes on the GitHub release, and the bytes the attestation covers are the
+# SAME bytes, built once, from this commit, by this workflow.
 #
-# `workflow_dispatch` is here because v0.3.0 shipped before this workflow did. A release
-# that already exists can be published by firing this manually against its tag.
+# Built once is the load-bearing word. A pipeline that builds separately for each
+# destination publishes artifacts that were never compared, and "identical because the
+# build is deterministic" is a claim nobody ran. Everything downstream consumes one
+# uploaded artifact.
+#
+# `workflow_dispatch` is here because v0.3.0 shipped before this workflow did.
 
 on:
   release:
@@ -18,44 +22,104 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      sha256: ${{ steps.sums.outputs.list }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0            # tags, so the source archive is identifiable
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      # Build first, then prove the built artifact works. Publishing something that was
-      # never run from its own wheel is the packaging version of shipping an unexecuted
-      # check -- and this project has a finding number for that shape.
-      - name: Build
+      - name: Build once
         run: |
           python -m pip install --upgrade build
           python -m build
 
-      - name: Verify the wheel in a clean environment
+      # Prove the shipped wheel works FROM ITSELF, not from the source tree beside it.
+      # A package that was only ever exercised in its own checkout is the packaging
+      # version of a documented check nobody executes — this project has finding numbers
+      # for that shape.
+      - name: Verify the built wheel in a clean environment
         run: |
           python -m venv /tmp/clean
-          /tmp/clean/bin/pip install --quiet dist/*.whl
-          /tmp/clean/bin/dispatch-audit selftest
+          /tmp/clean/bin/pip install --quiet dist/*.whl pytest
+          /tmp/clean/bin/dispatch-audit selftest --with-evidence
           /tmp/clean/bin/dispatch-audit demo
+          /tmp/clean/bin/python -m pytest tests -q
+
+      - name: SBOM
+        run: |
+          python -m pip install --quiet cyclonedx-bom
+          /tmp/clean/bin/python -m pip install --quiet cyclonedx-bom
+          /tmp/clean/bin/cyclonedx-py environment /tmp/clean \
+            --output-format JSON --outfile dist/sbom.cyclonedx.json
+          echo "SBOM describes the ENVIRONMENT the verified wheel was installed into."
 
       - name: Checksums
-        run: sha256sum dist/*
+        id: sums
+        run: |
+          cd dist && sha256sum * | tee SHA256SUMS.txt
+          echo "list<<EOF" >> "$GITHUB_OUTPUT"
+          cat SHA256SUMS.txt >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
 
       - uses: actions/upload-artifact@v4
         with:
           name: dist
           path: dist/
 
-  pypi:
+  attest:
     needs: build
     runs-on: ubuntu-latest
-    environment: pypi          # configure the trusted publisher against this environment
     permissions:
-      id-token: write          # the OIDC token PyPI checks; nothing else is needed
+      id-token: write
+      attestations: write
+      contents: read
     steps:
       - uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist/
+      - name: Build provenance for the distributions
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: "dist/*.whl,dist/*.tar.gz"
+      - name: Attest the SBOM
+        uses: actions/attest-sbom@v2
+        with:
+          subject-path: "dist/*.whl"
+          sbom-path: "dist/sbom.cyclonedx.json"
+
+  github_release:
+    needs: [build, attest]
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - name: Attach the same bytes to the release
+        run: gh release upload "${{ github.event.release.tag_name }}" dist/* --clobber
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+  pypi:
+    needs: [build, attest]
+    runs-on: ubuntu-latest
+    environment: pypi            # configure the trusted publisher against this environment
+    permissions:
+      id-token: write            # the OIDC token PyPI checks; no long-lived secret exists
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - name: Keep only the distributions PyPI accepts
+        run: rm -f dist/SHA256SUMS.txt dist/sbom.cyclonedx.json
       - uses: pypa/gh-action-pypi-publish@release/v1
