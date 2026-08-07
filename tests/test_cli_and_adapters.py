@@ -1,11 +1,11 @@
 """The command line and the adapters, exercised the way a user meets them."""
 import json
 
-from agentaudit.adapters import anthropic_tools, openai_tools, python_tools
-from agentaudit.cli import main
-from agentaudit.demo import mock_agent
-from agentaudit.demo.tools import SCHEMA, TOOLS
-from agentaudit.fidelity.session import AuditSession
+from dispatch_fidelity.adapters import anthropic_tools, openai_tools, python_tools
+from dispatch_fidelity.cli import main
+from dispatch_fidelity.demo import mock_agent
+from dispatch_fidelity.demo.tools import SCHEMA, TOOLS
+from dispatch_fidelity.fidelity.session import AuditSession
 
 
 def test_demo_command_exits_zero(tmp_path, capsys):
@@ -80,7 +80,9 @@ def test_claims_instruction_documents_the_contract():
     assert '"results"' in text and "```json" in text
 
 
-# --- findings #17-#20: what the screen says, the exit code must say too -------------
+# --- findings #17-#25: what the screen says, the exit code must say too -------------
+TORN_LINE = '{"seq": 99, "run_id": "x", "tool"\n'      # valid JSON prefix, no closing brace
+
 def _write(tmp_path, report):
     p = tmp_path / "report.md"
     p.write_text(report, encoding="utf-8")
@@ -136,6 +138,40 @@ def test_strict_results_flags_a_rewritten_value(tmp_path):
     session, report = mock_agent.run("honest", run_dir=tmp_path)
     tampered = report.replace('"result": "51"', '"result": "52"')
     claims = _write(tmp_path, tampered)
-    assert main(["score", "--claims", str(claims), "--log", str(session.log_path)]) == 0
-    assert main(["score", "--claims", str(claims), "--log", str(session.log_path),
-                 "--strict-results"]) == 1
+    base = ["score", "--claims", str(claims), "--log", str(session.log_path),
+            "--manifest", str(session.manifest_path)]
+    assert main(base) == 0
+    assert main([*base, "--strict-results"]) == 1
+
+
+def test_a_run_scored_without_a_manifest_is_not_a_pass(tmp_path, capsys):
+    """#25. `--manifest` is optional; treating its absence as a proven binding is not."""
+    session, report = mock_agent.run("honest", run_dir=tmp_path)
+    rc = main(["score", "--claims", str(_write(tmp_path, report)),
+               "--log", str(session.log_path)])
+    assert rc == 2
+    assert "never checked" in capsys.readouterr().out
+
+
+def test_a_torn_log_with_a_manifest_stays_inconclusive(tmp_path, capsys):
+    """#24. The same damaged evidence used to become FAIL once a manifest was supplied."""
+    session, report = mock_agent.run("honest", run_dir=tmp_path)
+    torn = tmp_path / "torn.toollog.jsonl"
+    torn.write_text(session.log_path.read_text(encoding="utf-8") + TORN_LINE,
+                    encoding="utf-8")
+    rc = main(["score", "--claims", str(_write(tmp_path, report)), "--log", str(torn),
+               "--manifest", str(session.manifest_path)])
+    assert rc == 2
+    out = capsys.readouterr().out
+    assert "INCONCLUSIVE" in out and "FAIL" not in out.split("INCONCLUSIVE")[0][-200:]
+
+
+def test_bind_on_a_torn_log_is_unproven_not_failed(tmp_path, capsys):
+    """#24 on the `bind` path, which is where it was found."""
+    session, _ = mock_agent.run("honest", run_dir=tmp_path)
+    torn = tmp_path / "torn.toollog.jsonl"
+    torn.write_text(session.log_path.read_text(encoding="utf-8") + TORN_LINE,
+                    encoding="utf-8")
+    assert main(["bind", "--manifest", str(session.manifest_path),
+                 "--log", str(torn)]) == 2
+    assert "UNPROVEN" in capsys.readouterr().out

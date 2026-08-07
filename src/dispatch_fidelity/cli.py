@@ -4,12 +4,12 @@ Six commands, and the first one you should run is `demo`, because a tool that au
 other software has to be auditable itself -- and the fastest way to trust it is to watch
 it catch a lie you can read in full.
 
-    agentaudit demo         run an honest agent and a lying one, offline
-    agentaudit selftest     the validation matrix: does the scorer catch known defects?
-    agentaudit score        score an existing report against an existing tool log
-    agentaudit bind         check that a manifest and a tool log come from one run
-    agentaudit gate         record a project check command (evidence discipline)
-    agentaudit verify       read-only check of recorded runs, anchors and waivers
+    dispatch-audit demo         run an honest agent and a lying one, offline
+    dispatch-audit selftest     the validation matrix: does the scorer catch known defects?
+    dispatch-audit score        score an existing report against an existing tool log
+    dispatch-audit bind         check that a manifest and a tool log come from one run
+    dispatch-audit gate         record a project check command (evidence discipline)
+    dispatch-audit verify       read-only check of recorded runs, anchors and waivers
 """
 from __future__ import annotations
 
@@ -143,7 +143,7 @@ def _cmd_verify(args) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(prog="agentaudit", description=__doc__,
+    p = argparse.ArgumentParser(prog="dispatch-audit", description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(dest="command", required=True)
 
@@ -191,7 +191,7 @@ def main(argv=None) -> int:
         head = argv[:argv.index("--")] if "--" in argv else argv
         args = build_parser().parse_args(head)
         if not rest:
-            print("usage: agentaudit gate [--label NAME] -- <command> [args...]")
+            print("usage: dispatch-audit gate [--label NAME] -- <command> [args...]")
             return 2
         return _cmd_gate(args, rest)
     args = build_parser().parse_args(argv)

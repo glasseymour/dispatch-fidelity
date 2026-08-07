@@ -5,7 +5,7 @@ without either side knowing. That out-of-band position is the point: a log the a
 write to is a log the agent can shape, and the whole method depends on ground truth the
 measured system cannot reach.
 
-    python -m agentaudit.adapters.mcp_stdio --run-dir audit_runs -- npx -y @scope/server
+    python -m dispatch_fidelity.adapters.mcp_stdio --run-dir audit_runs -- npx -y @scope/server
 
 The proxy speaks no MCP semantics beyond finding `tools/call` requests and matching
 responses by id. Anything it does not understand is relayed byte-for-byte, so a protocol
@@ -96,7 +96,7 @@ def main(argv=None) -> int:
     down.start()
     code = proc.wait()
     down.join(timeout=2)
-    print(f"[agentaudit] tool log: {log_path}", file=sys.stderr)
+    print(f"[dispatch-fidelity] tool log: {log_path}", file=sys.stderr)
     return code
 
 

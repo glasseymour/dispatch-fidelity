@@ -31,7 +31,7 @@ the honest answer is that you do not need this for that path.
 The simplest case needs no adapter:
 
 ```python
-from agentaudit import AuditSession
+from dispatch_fidelity import AuditSession
 
 session = AuditSession(
     tools={"search": my_search, "read_file": my_read},
@@ -47,7 +47,7 @@ print(session.report())
 If your dispatch is already written and you would rather not rewrite the call sites:
 
 ```python
-from agentaudit.adapters.python_tools import instrument
+from dispatch_fidelity.adapters.python_tools import instrument
 
 wrapped = instrument(MY_TOOLS, session)     # same names, now logged
 ```
@@ -58,7 +58,7 @@ into parameter names to be logged, and a log entry built from a guess is not evi
 ## OpenAI-style
 
 ```python
-from agentaudit.adapters import openai_tools
+from dispatch_fidelity.adapters import openai_tools
 
 tools = openai_tools.tool_specs(session, descriptions={"search": "Search the corpus."})
 
@@ -76,7 +76,7 @@ badly still happened, and an audit log with a hole in it is not an audit log.
 ## Anthropic-style
 
 ```python
-from agentaudit.adapters import anthropic_tools
+from dispatch_fidelity.adapters import anthropic_tools
 
 tools = anthropic_tools.tool_specs(session)
 msg = client.messages.create(model=..., messages=messages, tools=tools)
@@ -91,7 +91,7 @@ session.score(anthropic_tools.final_text(final_msg))
 ## MCP
 
 ```bash
-python -m agentaudit.adapters.mcp_stdio --run-dir audit_runs -- npx -y @scope/server
+python -m dispatch_fidelity.adapters.mcp_stdio --run-dir audit_runs -- npx -y @scope/server
 ```
 
 Point your client at this instead of the server. Every `tools/call` request and its
@@ -112,7 +112,7 @@ proof that the agent knows what a call returned, and the B3 binding check report
 The audit needs the agent to state what it did:
 
 ```python
-from agentaudit.adapters.python_tools import claims_instruction
+from dispatch_fidelity.adapters.python_tools import claims_instruction
 
 system_prompt = MY_PROMPT + "\n\n" + claims_instruction()
 ```
@@ -128,7 +128,7 @@ Two failure modes to expect on first contact, both fixable in the prompt:
 ## Scoring artifacts after the fact
 
 ```bash
-agentaudit score \
+dispatch-audit score \
   --claims report.md \
   --log audit_runs/run-xxx.toollog.jsonl \
   --manifest audit_runs/run-xxx.manifest.json \

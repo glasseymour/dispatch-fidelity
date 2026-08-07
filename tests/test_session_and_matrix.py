@@ -1,15 +1,15 @@
 """End-to-end behaviour, and the validation matrix as a test.
 
-The matrix runs here as well as in `agentaudit selftest` on purpose. A user who never
+The matrix runs here as well as in `dispatch-audit selftest` on purpose. A user who never
 runs the CLI still gets the guarantee on every `pytest`, and a contributor who breaks a
 scoring rule sees it break the build rather than sees a number move.
 """
 import json
 
-from agentaudit import AuditSession
-from agentaudit.demo import mock_agent
-from agentaudit.demo.tools import SCHEMA, TOOLS
-from agentaudit.inject import validate
+from dispatch_fidelity import AuditSession
+from dispatch_fidelity.demo import mock_agent
+from dispatch_fidelity.demo.tools import SCHEMA, TOOLS
+from dispatch_fidelity.inject import validate
 
 
 def test_honest_run_is_clean(tmp_path):
@@ -52,7 +52,7 @@ def test_validation_matrix_is_fully_green():
     rows, ok = validate.run(verbose=False)
     failed = [r.key for r in rows if not r.passed]
     assert ok, f"validation matrix regressions: {failed}"
-    assert len(rows) == 26
+    assert len(rows) == 28
 
 
 def test_substituting_run_is_caught(tmp_path):

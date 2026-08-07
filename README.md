@@ -1,4 +1,6 @@
-# agentaudit
+# dispatch-fidelity
+
+*Dispatch-fidelity auditing for agentic systems.*
 
 **Did your agent actually call what it says it called?**
 
@@ -7,12 +9,12 @@ a claim can appear that no execution backs — a search that never ran, a file n
 a check never performed. The report reads correctly. The numbers look fine. Nothing in
 your logs says otherwise, because nothing went wrong; something simply never happened.
 
-`agentaudit` measures how often that occurs in your system, using ground truth the agent
-cannot reach.
+`dispatch-fidelity` measures how often that occurs in your system, using ground truth the
+agent cannot reach.
 
 ```bash
-pip install agentaudit
-agentaudit demo
+pip install dispatch-fidelity
+dispatch-audit demo
 ```
 
 The demo runs three scripted agents offline — no key, no network, no model.
@@ -51,7 +53,7 @@ execution.
 ## Auditing your own system
 
 ```python
-from agentaudit import AuditSession
+from dispatch_fidelity import AuditSession
 
 session = AuditSession(tools={"search": my_search, "read_file": my_read})
 
@@ -72,13 +74,13 @@ The agent must end its answer with a fenced block naming what it called:
 ```
 ````
 
-`agentaudit.adapters.python_tools.claims_instruction()` returns that paragraph ready to
+`dispatch_fidelity.adapters.python_tools.claims_instruction()` returns that paragraph ready to
 paste into a system prompt.
 
 ### Already have a tool loop?
 
 ```python
-from agentaudit.adapters import openai_tools, anthropic_tools
+from dispatch_fidelity.adapters import openai_tools, anthropic_tools
 
 tool_messages = openai_tools.execute_tool_calls(session, assistant_message)
 result_blocks = anthropic_tools.execute_tool_use(session, message.content)
@@ -87,7 +89,7 @@ result_blocks = anthropic_tools.execute_tool_use(session, message.content)
 ### Behind MCP
 
 ```bash
-python -m agentaudit.adapters.mcp_stdio --run-dir audit_runs -- npx -y @scope/server
+python -m dispatch_fidelity.adapters.mcp_stdio --run-dir audit_runs -- npx -y @scope/server
 ```
 
 A pass-through logger between client and server. It records execution; it does not
@@ -110,7 +112,7 @@ Artifacts are written to `audit_runs/` in the current working directory by defau
 ### Scoring artifacts you already have
 
 ```bash
-agentaudit score --claims report.md --log run.toollog.jsonl --manifest run.manifest.json
+dispatch-audit score --claims report.md --log run.toollog.jsonl --manifest run.manifest.json
 ```
 
 Three exit codes, because there are three outcomes:
@@ -131,7 +133,7 @@ gate. Treat exit 2 as "this run tells you nothing", not as "this run is fine".
 ## Prove the instrument before you trust it
 
 ```bash
-agentaudit selftest
+dispatch-audit selftest
 ```
 
 Twenty-six cases, and both halves matter:
@@ -168,8 +170,8 @@ Dispatch fidelity asks whether an agent's claims about tool calls are true. The 
 question applies one level out, to an agent's claim that its checks passed:
 
 ```bash
-agentaudit gate --label tests -- pytest -q     # writer: records the run
-agentaudit verify                              # reader: read-only, fail-closed
+dispatch-audit gate --label tests -- pytest -q     # writer: records the run
+dispatch-audit verify                              # reader: read-only, fail-closed
 ```
 
 | Guard | What it closes |

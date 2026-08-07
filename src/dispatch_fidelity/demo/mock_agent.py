@@ -18,7 +18,7 @@ produce: a plausible tool with plausible arguments and a plausible-looking resul
 is what makes them invisible to a reader skimming the report, and visible to this
 instrument.
 
-A demo that only ever passes proves nothing, so `agentaudit demo` runs both.
+A demo that only ever passes proves nothing, so `dispatch-audit demo` runs both.
 """
 from __future__ import annotations
 

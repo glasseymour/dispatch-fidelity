@@ -14,9 +14,15 @@ at 1 here would make the tool look younger than its error history.
 code said another.** A verdict that only exists in a human-readable report is not a gate.
 Anyone who wired 0.2.0 into CI was green on runs a person would have stopped.
 
-They were found by external review, not by this project's own matrix — because nothing in
-that matrix looked at exit codes. It does now: the `G` rows below test the machine
-boundary directly, which is the only durable fix for a class like this.
+They were found by model-assisted external review, not by this project's own matrix —
+because nothing in that matrix looked at exit codes. It does now: the `G` rows below test
+the machine boundary directly, which is the only durable fix for a class like this.
+
+**Provenance.** #17–#23 identified during a model-assisted external review using OpenAI
+GPT-5.6 Pro via ChatGPT on 2026-08-07; #24 during a model-assisted external review using
+Anthropic Claude Opus 5 on the same date; #25 from the GPT-5.6 Pro review. All reproduced,
+classified and implemented by Zoltán Varga. See [REVIEW_PROVENANCE.md](REVIEW_PROVENANCE.md),
+including how the two reviews' colliding `#24` was resolved.
 
 ### Finding #17 — `SUBSTITUTED` never reached the exit code
 
@@ -119,18 +125,52 @@ figures are a pass over declared regression cases, not a statistical sensitivity
 specificity estimate, and the old line invited the stronger reading. The deposit's
 18-class × 20-injection design is the deeper validation; this matrix is the fast guard.
 
+### Finding #24 — damaged evidence became FAIL once a manifest was supplied
+
+`check_binding` put tool-log damage into `findings`, which made the binding `FAILED`,
+which `decide()` treats as a hard failure. So the same torn log produced INCONCLUSIVE
+without a manifest and FAIL with one — two paths, two verdicts, one input. The printed
+text already said "no result over it is conclusive"; now the state agrees with the
+sentence. Log damage is `unprovable`, not a finding. A genuine contradiction, such as a
+manifest and log from two different runs, is still `FAILED`.
+
+### Finding #25 — a binding that was never checked reported as PASS
+
+`--manifest` is optional, and a run scored without one came back PASS while the report
+described a proven binding. No binding check had run at all. Binding now has a fourth
+state, `NOT_CHECKED`, and it is INCONCLUSIVE.
+
+Absent evidence and contradicted evidence are different things, and only the second is a
+failure. #24 and #25 are the two ways that distinction was missing.
+
+### Why the matrix missed #24 and #25
+
+`G0`–`G4` tested this module's own composition rather than the paths a user takes. `G4`
+handed `decide()` a binding computed from the **intact** log while corrupting only the
+copy the scorer saw, so the CLI path — where the damaged log goes into both — was never
+covered. A matrix that tests its own convenience wiring proves nothing about the command
+someone runs. `G5` and `G6` close it.
+
 ### Matrix
 
-19 → **26 cases**, sensitivity **15/15**, specificity **11/11**. New rows: `P8` (#16),
-`N7`, `N8`, `P9`/`N9` (#21, strict), and `G0`–`G4`, which assert exit codes for the clean,
-substituted, unmeasured, unprovable and torn-log paths.
+19 → **28 cases**, sensitivity **17/17**, specificity **11/11**. New rows: `P8` (#16),
+`N7`, `N8`, `P9`/`N9` (#21, strict), and `G0`–`G6`, which assert exit codes for the clean,
+substituted, unmeasured, unprovable, torn-log, unchecked-binding and torn-log-with-manifest
+paths.
+
+### Renamed
+
+The distribution, package and command are now `dispatch-fidelity`, `dispatch_fidelity`
+and `dispatch-audit`. Formerly developed under the pre-release name `agentaudit`. No tag
+or release existed under the old name, so nothing depends on it; the new name is the
+project's actual distinguishing concept and ties the package to the method deposit.
 
 ## 0.2.0 — 2026-08-07
 
 ### Finding #16 — silent substitution
 
 **The defect.** A tool call runs, returns an error, and the agent reports a plausible
-value in its place. Until this release `agentaudit` scored that run **CLEAN**:
+value in its place. Until this release `dispatch-fidelity` scored that run **CLEAN**:
 
 ```
 proxy returned: ERROR:TypeError
@@ -160,8 +200,9 @@ permanent DOI record. Widening what `fabricated` means would silently change wha
 published number refers to, which is the exact failure this project exists to catch. Both
 verdicts make a run NOT CLEAN; `value_integrity_failures` gives the wider, post-hoc sum.
 
-**Provenance.** External review, 2026-08-07, reproduced against this code before the fix.
-The rule is ported from `analysis/silent_substitution.py` in the deposit, and follows
+**Provenance.** Identified during a model-assisted external review using Anthropic Claude
+Opus 5 on 2026-08-07; reproduced against this code before the fix, classified and
+implemented by Zoltán Varga. The rule is ported from `analysis/silent_substitution.py` in the deposit, and follows
 rule 4.3 of the developer note: *a failed call needs its own legal branch*. A schema that
 offers only `value` or `MISSING` steers the agent toward the plausible number, because
 `MISSING` implies it did not work — when it did work, and failed.

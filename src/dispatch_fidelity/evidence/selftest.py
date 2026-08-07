@@ -20,7 +20,7 @@ from pathlib import Path
 import os
 
 HERE = Path(__file__).resolve().parent
-SRC_ROOT = HERE.parent.parent                     # .../src, so `-m agentaudit...` resolves
+SRC_ROOT = HERE.parent.parent                     # .../src, so `-m dispatch_fidelity...` resolves
 PY = [sys.executable]
 PASS_CMD = PY + ["-c", "print('2 passed')"]
 
@@ -39,12 +39,12 @@ def run(args, cwd):
 
 
 def gate(cwd, cmd=None):
-    return run(PY + ["-m", "agentaudit.evidence.gate", "--label", "tests", "--",
+    return run(PY + ["-m", "dispatch_fidelity.evidence.gate", "--label", "tests", "--",
                      *(cmd or PASS_CMD)], cwd)
 
 
 def verify(cwd):
-    return run(PY + ["-m", "agentaudit.evidence.verify"], cwd)
+    return run(PY + ["-m", "dispatch_fidelity.evidence.verify"], cwd)
 
 
 def expect(case, cond, detail=""):
@@ -54,7 +54,7 @@ def expect(case, cond, detail=""):
 
 
 def main():
-    tmp = Path(tempfile.mkdtemp(prefix="agent-verify-selftest-"))
+    tmp = Path(tempfile.mkdtemp(prefix="dispatch-fidelity-selftest-"))
     ok = True
     try:
         (tmp / "src.py").write_text("import os  # noqa\n\n\ndef f():\n    return 1\n",

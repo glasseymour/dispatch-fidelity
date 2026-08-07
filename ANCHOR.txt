@@ -8,15 +8,14 @@
 #
 # Since 0.3.0 the anchor command must also EXIT 0. A command that crashed while printing
 # the expected text used to count as an anchor holding — finding #22.
-#
-# The matrix figures move when a finding adds a class. A moved anchor is a claim that
-# something changed on purpose, and the CHANGELOG entry is where that claim is argued.
 
-matrix_sensitivity | agentaudit selftest | sensitivity : 15/15
-matrix_specificity | agentaudit selftest | specificity : 11/11
-evidence_guards    | agentaudit selftest --with-evidence | ALL GUARDS HOLD
-gate_substituted   | agentaudit selftest | G1  SUBSTITUTED reaches the exit code
-gate_unmeasured    | agentaudit selftest | G2  unmeasured run is not a pass
-gate_unproven      | agentaudit selftest | G3  unprovable binding is not BOUND
-gate_torn_log      | agentaudit selftest | G4  an unreadable log line is not a pass
-demo_all_three     | agentaudit demo | All three outcomes are as expected
+matrix_sensitivity | dispatch-audit selftest | sensitivity : 17/17
+matrix_specificity | dispatch-audit selftest | specificity : 11/11
+evidence_guards    | dispatch-audit selftest --with-evidence | ALL GUARDS HOLD
+gate_substituted   | dispatch-audit selftest | G1  SUBSTITUTED reaches the exit code
+gate_unmeasured    | dispatch-audit selftest | G2  unmeasured run is not a pass
+gate_unproven      | dispatch-audit selftest | G3  unprovable binding is not BOUND
+gate_torn_log      | dispatch-audit selftest | G4  an unreadable log line is not a pass
+gate_unchecked     | dispatch-audit selftest | G5  binding never checked is not a pass
+gate_torn_manifest | dispatch-audit selftest | G6  torn log stays inconclusive
+demo_all_three     | dispatch-audit demo | All three outcomes are as expected

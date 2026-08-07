@@ -11,7 +11,7 @@ told the truth, that is the most valuable issue you can open. Both directions co
   the validation matrix started as one of these, found by somebody who was annoyed.
 
 Attach the artifacts: the report text, the tool log, the manifest. A finding with
-artifacts becomes a new row in `src/agentaudit/inject/classes.py` and is then guarded
+artifacts becomes a new row in `src/dispatch_fidelity/inject/classes.py` and is then guarded
 forever. A finding without them is a conversation.
 
 The most useful finding in this project's history came from a reader who never ran the
@@ -21,11 +21,11 @@ nothing about whether two files belonged together. That became the binding check
 ## Setup
 
 ```bash
-git clone https://github.com/glasseymour/agentaudit
-cd agentaudit
+git clone https://github.com/glasseymour/dispatch-fidelity
+cd dispatch-fidelity
 pip install -e ".[dev]"
 pytest -q
-agentaudit selftest --with-evidence
+dispatch-audit selftest --with-evidence
 ```
 
 No runtime dependencies, and none will be added without a reason that survives the
@@ -49,7 +49,7 @@ never does. A verifier that regenerates its own evidence cannot fail, and that s
 defect is why this rule exists.
 
 **Suppressions get declared.** Any `noqa`, `skip`, `xfail` or `ignore` you add goes in
-`waivers.txt` with a written reason. `agentaudit verify` fails otherwise, and it runs on
+`waivers.txt` with a written reason. `dispatch-audit verify` fails otherwise, and it runs on
 this repository too.
 
 **Say what you did not do.** A pull request that names its own gaps is easier to merge

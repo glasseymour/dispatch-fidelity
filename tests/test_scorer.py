@@ -3,7 +3,7 @@ import json
 
 import pytest
 
-from agentaudit.fidelity.scorer import extract_claims, receipt_matches, score
+from dispatch_fidelity.fidelity.scorer import extract_claims, receipt_matches, score
 
 NONCE = "a" * 32
 LOG = [

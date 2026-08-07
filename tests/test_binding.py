@@ -7,9 +7,9 @@ about one execution.
 import json
 import shutil
 
-from agentaudit.demo import mock_agent
-from agentaudit.fidelity.binding import check_binding, recover_nonce
-from agentaudit.fidelity.proxy import load_log
+from dispatch_fidelity.demo import mock_agent
+from dispatch_fidelity.fidelity.binding import check_binding, recover_nonce
+from dispatch_fidelity.fidelity.proxy import load_log
 
 
 def test_intact_run_binds(tmp_path):

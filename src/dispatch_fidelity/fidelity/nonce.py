@@ -45,7 +45,7 @@ def seal_manifest(run_id: str, nonce: str, out_dir: Path, *, system: dict | None
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     manifest = {
-        "schema": "agentaudit/manifest/1",
+        "schema": "dispatch-fidelity/manifest/1",
         "run_id": run_id,
         "task_id": task_id,
         "nonce_sha256": nonce_commitment(nonce),

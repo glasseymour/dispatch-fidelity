@@ -147,11 +147,26 @@ def _run_gate_matrix(work: Path) -> list[Row]:
     row("G4", "positive", "an unreadable log line is not a pass", 2, torn.exit_code,
         "finding #20: a corrupt last line left no trace at all")
 
+    # G5 and G6 exist because G0-G4 measured this module's own composition rather than
+    # the paths a user actually takes. G4 handed `decide` a binding computed from the
+    # INTACT log while corrupting only the copy the scorer saw -- so the CLI, where the
+    # damaged log goes into both, was never covered. Findings #24 and #25 both live in
+    # that gap. A matrix that tests its own convenience wiring proves nothing about the
+    # command someone runs.
+    unchecked = decide(score(report, records, nonce, session.schema), None, records)
+    row("G5", "positive", "binding never checked is not a pass", 2, unchecked.exit_code,
+        "finding #25: --manifest is optional, and its absence was read as proof")
+
+    torn_binding = check_binding(session.manifest_path, corrupt)
+    both = decide(score(report, damaged, nonce, session.schema), torn_binding, damaged)
+    row("G6", "positive", "torn log stays inconclusive with a manifest", 2, both.exit_code,
+        "finding #24: damaged evidence became FAIL once a manifest was supplied")
+
     return rows
 
 
 def run(verbose: bool = True) -> tuple[list[Row], bool]:
-    work = Path(tempfile.mkdtemp(prefix="agentaudit-matrix-"))
+    work = Path(tempfile.mkdtemp(prefix="dispatch-fidelity-matrix-"))
     try:
         rows = _run_claim_matrix(work) + _run_splice_matrix(work) + _run_gate_matrix(work)
     finally:

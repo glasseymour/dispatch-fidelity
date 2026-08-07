@@ -8,7 +8,7 @@ A property of one system running one workload under one configuration. Not a gra
 model ranking, and not transferable. Change the task pool and it moves; change the
 orchestration shape and it moves; change the model and it moves.
 
-This is why `agentaudit` is a tool you run rather than a leaderboard you cite.
+This is why `dispatch-fidelity` is a tool you run rather than a leaderboard you cite.
 
 ## What the study found, and what it did not
 
@@ -93,7 +93,7 @@ evidence.
   numbers in the source study looked reasonable at the time.
 - Report the denominator. `3 fabrications` means nothing without `of how many`.
 - When a result surprises you, suspect the instrument first. That is what
-  `agentaudit selftest` is for, and it is cheap to run.
+  `dispatch-audit selftest` is for, and it is cheap to run.
 
 ## Before you publish a number
 

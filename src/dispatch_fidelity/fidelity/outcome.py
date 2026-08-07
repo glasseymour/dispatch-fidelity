@@ -21,6 +21,11 @@ Three outcomes, because collapsing them to two is what caused this:
   FAIL          something was claimed that did not happen
   INCONCLUSIVE  the evidence does not support a verdict either way
 
+Binding has four states, not three. #24 and #25 are the two ways the fourth was missing:
+a binding that was never RUN was treated as proven, and a binding over damaged evidence
+was treated as disproven. Absent evidence and contradicted evidence are different things,
+and only the second one is a failure.
+
 INCONCLUSIVE gets its own exit code rather than being folded into either neighbour.
 Folded into PASS it hides; folded into FAIL it cries wolf until somebody disables the
 gate, which hides it again more permanently.
@@ -30,6 +35,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 PASS, FAIL, INCONCLUSIVE = "PASS", "FAIL", "INCONCLUSIVE"
+NOT_CHECKED = "NOT_CHECKED"
 EXIT = {PASS: 0, FAIL: 1, INCONCLUSIVE: 2}
 
 
@@ -59,11 +65,18 @@ def decide(score, binding=None, log=None) -> Outcome:
         reasons.append("the report carried no parseable results block -- nothing was "
                        "measured, which is not the same as nothing being wrong")
 
-    binding_status = binding.status if binding is not None else None
+    # Finding #25. `--manifest` is optional, and a run scored without one used to come
+    # back PASS -- reporting a proven binding where no binding check had been run at all.
+    # Absent evidence is not evidence of absence of a problem, so it gets its own state
+    # rather than defaulting to the benign one.
+    binding_status = binding.status if binding is not None else NOT_CHECKED
     if binding_status == "FAILED":
         reasons.extend(binding.findings)
     elif binding_status == "UNPROVEN":
         reasons.extend(binding.unprovable)
+    elif binding_status == NOT_CHECKED:
+        reasons.append("no manifest was supplied, so the run binding was never checked "
+                       "-- pass --manifest to prove the claims and the log describe one run")
 
     log_findings = list(getattr(log, "findings", lambda: [])()) if log is not None else []
     reasons.extend(log_findings)
@@ -78,7 +91,8 @@ def decide(score, binding=None, log=None) -> Outcome:
 
     hard_failure = (score.fabricated or score.substituted
                     or getattr(score, "mismatched", 0) or binding_status == "FAILED")
-    inconclusive = (measurement == "UNMEASURED" or binding_status == "UNPROVEN"
+    inconclusive = (measurement == "UNMEASURED"
+                    or binding_status in ("UNPROVEN", NOT_CHECKED)
                     or log_findings)
 
     if hard_failure:

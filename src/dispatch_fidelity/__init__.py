@@ -1,4 +1,4 @@
-"""agentaudit -- did your agent actually call what it says it called?
+"""dispatch-fidelity -- did your agent actually call what it says it called?
 
 The short version of the method:
 

@@ -1,12 +1,12 @@
 cff-version: 1.2.0
-title: "agentaudit: dispatch-fidelity auditing for agentic systems"
+title: "dispatch-fidelity: dispatch-fidelity auditing for agentic systems"
 message: "If you use this software, please cite the method deposit below."
 type: software
 authors:
   - family-names: Varga
     given-names: Zoltan
     orcid: "https://orcid.org/0009-0003-1020-834X"
-repository-code: "https://github.com/glasseymour/agentaudit"
+repository-code: "https://github.com/glasseymour/dispatch-fidelity"
 license: Apache-2.0
 version: 0.3.0
 abstract: >-

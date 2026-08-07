@@ -3,7 +3,7 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "agentaudit"
+name = "dispatch-fidelity"
 version = "0.3.0"
 description = "Did your agent actually call what it says it called? A dispatch-fidelity audit for agentic systems."
 readme = "README.md"
@@ -32,12 +32,12 @@ dependencies = []
 dev = ["pytest>=7"]
 
 [project.urls]
-Homepage = "https://github.com/glasseymour/agentaudit"
+Homepage = "https://github.com/glasseymour/dispatch-fidelity"
 Method = "https://doi.org/10.5281/zenodo.21812041"
-Issues = "https://github.com/glasseymour/agentaudit/issues"
+Issues = "https://github.com/glasseymour/dispatch-fidelity/issues"
 
 [project.scripts]
-agentaudit = "agentaudit.cli:main"
+dispatch-audit = "dispatch_fidelity.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

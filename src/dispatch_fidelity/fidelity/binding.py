@@ -122,8 +122,15 @@ def check_binding(manifest_path: Path, log_path: Path, nonce_pattern=None) -> Bi
     if stem != run_id:
         r.findings.append(f"B1: manifest run_id {run_id!r} does not match filename {stem!r}")
 
-    for f in getattr(records, "findings", lambda: [])():
-        r.findings.append(f"B0: {f}")
+    # Finding #24. Damage to the log used to enter `findings`, which made the binding
+    # FAILED, which `decide` treats as a hard failure -- so the same torn log produced
+    # INCONCLUSIVE without a manifest and FAIL with one. Two paths, two verdicts, one
+    # input. Incomplete evidence is not proven falsehood: the text already said "no
+    # result over it is conclusive", and now the state agrees with the sentence.
+    log_damage = list(getattr(records, "findings", lambda: [])())
+    if log_damage:
+        r.checks["B0_log_intact"] = None
+        r.unprovable.extend(f"B0: {f}" for f in log_damage)
 
     if not records:
         r.unprovable.append(
