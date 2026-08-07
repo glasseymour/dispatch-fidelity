@@ -11,7 +11,7 @@ from agentaudit.fidelity.session import AuditSession
 def test_demo_command_exits_zero(tmp_path, capsys):
     assert main(["demo", "--run-dir", str(tmp_path)]) == 0
     out = capsys.readouterr().out
-    assert "CLEAN" in out and "NOT CLEAN" in out
+    assert "PASS" in out and "FAIL" in out
 
 
 def test_score_command_flags_a_lying_run(tmp_path, capsys):
@@ -78,3 +78,64 @@ def test_anthropic_adapter_executes_tool_use_blocks(tmp_path):
 def test_claims_instruction_documents_the_contract():
     text = python_tools.claims_instruction()
     assert '"results"' in text and "```json" in text
+
+
+# --- findings #17-#20: what the screen says, the exit code must say too -------------
+def _write(tmp_path, report):
+    p = tmp_path / "report.md"
+    p.write_text(report, encoding="utf-8")
+    return p
+
+
+def test_substituted_run_exits_1(tmp_path):
+    """#17. It was scored, printed, and left out of the gate."""
+    session, report = mock_agent.run("substituting", run_dir=tmp_path)
+    assert main(["score", "--claims", str(_write(tmp_path, report)),
+                 "--log", str(session.log_path),
+                 "--manifest", str(session.manifest_path)]) == 1
+
+
+def test_unmeasured_run_exits_2_not_0(tmp_path, capsys):
+    """#18. An empty trailing results block used to turn a scoreable run into a pass."""
+    session, report = mock_agent.run("lying", run_dir=tmp_path)
+    bypass = report + '\n```json\n{"results": []}\n```\n'
+    rc = main(["score", "--claims", str(_write(tmp_path, bypass)),
+               "--log", str(session.log_path), "--manifest", str(session.manifest_path)])
+    assert rc == 2
+    assert "INCONCLUSIVE" in capsys.readouterr().out
+
+
+def test_unprovable_binding_exits_2(tmp_path, capsys):
+    """#19. No canary call means B3 cannot be derived -- that is not BOUND."""
+    session, report = mock_agent.run("honest", run_dir=tmp_path)
+    kept = [json.loads(l) for l in session.log_path.read_text(encoding="utf-8").splitlines() if l.strip()]
+    kept = [r for r in kept if not r["tool"].startswith("canary")]
+    for i, rec in enumerate(kept, 1):
+        rec["seq"] = i
+    stripped = tmp_path / "nocanary.toollog.jsonl"
+    stripped.write_text("\n".join(json.dumps(r) for r in kept) + "\n", encoding="utf-8")
+
+    assert main(["bind", "--manifest", str(session.manifest_path),
+                 "--log", str(stripped)]) == 2
+    assert "UNPROVEN" in capsys.readouterr().out
+
+
+def test_a_torn_log_line_exits_2(tmp_path, capsys):
+    """#20. A corrupt last line used to vanish, leaving a gap-free prefix behind."""
+    session, report = mock_agent.run("honest", run_dir=tmp_path)
+    torn = tmp_path / "torn.toollog.jsonl"
+    torn.write_text(session.log_path.read_text(encoding="utf-8") + "{not json\n",
+                    encoding="utf-8")
+    rc = main(["score", "--claims", str(_write(tmp_path, report)), "--log", str(torn)])
+    assert rc == 2
+    assert "unreadable line" in capsys.readouterr().out
+
+
+def test_strict_results_flags_a_rewritten_value(tmp_path):
+    """#21, opt-in. Without the flag the same run is a pass."""
+    session, report = mock_agent.run("honest", run_dir=tmp_path)
+    tampered = report.replace('"result": "51"', '"result": "52"')
+    claims = _write(tmp_path, tampered)
+    assert main(["score", "--claims", str(claims), "--log", str(session.log_path)]) == 0
+    assert main(["score", "--claims", str(claims), "--log", str(session.log_path),
+                 "--strict-results"]) == 1

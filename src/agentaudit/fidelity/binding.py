@@ -45,6 +45,9 @@ from .proxy import load_log
 NONCE_RE = re.compile(r"CANARY\[[^\]]*\]:([0-9a-f]{16,})")
 
 
+PROVEN, UNPROVEN, FAILED = "PROVEN", "UNPROVEN", "FAILED"
+
+
 @dataclass
 class BindingResult:
     run_id: str
@@ -53,15 +56,39 @@ class BindingResult:
     findings: list = field(default_factory=list)
 
     @property
+    def status(self) -> str:
+        """PROVEN, UNPROVEN or FAILED -- three states, because there are three.
+
+        Finding #19, and it reverses an earlier decision in this file. `bound` used to
+        mean "no explicit finding", which made an UNPROVEN run indistinguishable from a
+        proven one at every machine boundary. The documentation drew the distinction
+        correctly and the code collapsed it, which is the worse of the two ways to be
+        inconsistent.
+
+        The sharpest case: a manifest with an EMPTY tool log passed every check. B1 held,
+        an empty sequence is trivially gap-free, B4 and B5 have nothing to contradict, and
+        B3 was merely unprovable -- so `bind` printed BOUND over evidence containing no
+        evidence. It now returns UNPROVEN, which exits 2, not 0.
+
+        This matters most behind an MCP relay, where the documentation already says the
+        canary cannot be injected and B3 will be unprovable. Every such run was reporting
+        a successful binding.
+        """
+        if self.findings:
+            return FAILED
+        if any(v is None for v in self.checks.values()):
+            return UNPROVEN
+        return PROVEN
+
+    @property
     def bound(self) -> bool:
-        """True only if every applicable check passed. Unprovable B3 does not fail the
-        run, but it is never silently counted as a pass either."""
-        return not self.findings
+        """Kept for callers, now meaning exactly what the word says: B3 was derived."""
+        return self.status == PROVEN
 
     def to_dict(self) -> dict:
         return {"run_id": self.run_id, "checks": self.checks,
                 "unprovable": self.unprovable, "findings": self.findings,
-                "bound": self.bound}
+                "status": self.status, "bound": self.bound}
 
 
 def recover_nonce(log_records: list[dict], nonce_pattern=None) -> str | None:
@@ -94,6 +121,18 @@ def check_binding(manifest_path: Path, log_path: Path, nonce_pattern=None) -> Bi
     r.checks["B1_manifest_self_identifies"] = (stem == run_id)
     if stem != run_id:
         r.findings.append(f"B1: manifest run_id {run_id!r} does not match filename {stem!r}")
+
+    for f in getattr(records, "findings", lambda: [])():
+        r.findings.append(f"B0: {f}")
+
+    if not records:
+        r.unprovable.append(
+            "B0: the tool log holds no records, so every check below is trivially "
+            "satisfiable -- there is nothing here to bind"
+        )
+        r.checks["B0_log_has_records"] = None
+    else:
+        r.checks["B0_log_has_records"] = True
 
     log_ids = {str(rec.get("run_id")) for rec in records}
     seqs = [rec.get("seq") for rec in records if isinstance(rec.get("seq"), int)]

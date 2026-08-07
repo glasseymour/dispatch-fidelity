@@ -94,18 +94,52 @@ def _as_mapping(tools) -> dict[str, Callable]:
     return out
 
 
-def load_log(path: Path) -> list[dict]:
-    """Read a tool log. Malformed lines are skipped and counted by the caller if needed."""
+class ToolLog(list):
+    """The records, plus what could not be read.
+
+    A plain list was the original return type and it silently dropped malformed lines.
+    That is finding #20: a corrupted last line vanishes without a trace, the surviving
+    prefix stays gap-free, and every downstream check reports a clean run over evidence
+    that is missing a piece. A middle line usually shows up as a sequence gap; the last
+    one does not show up at all.
+
+    An audit log reader has to be fail-closed. This subclass keeps every existing caller
+    working -- it iterates and indexes like the list it replaced -- while carrying the
+    damage forward so a caller cannot fail to see it.
+    """
+
+    def __init__(self, records=(), malformed=(), total_lines=0, path=None):
+        super().__init__(records)
+        self.malformed = list(malformed)     # 1-based line numbers
+        self.total_lines = total_lines
+        self.path = path
+
+    @property
+    def intact(self) -> bool:
+        return not self.malformed
+
+    def findings(self) -> list[str]:
+        if not self.malformed:
+            return []
+        shown = ", ".join(str(n) for n in self.malformed[:8])
+        more = "" if len(self.malformed) <= 8 else f" (+{len(self.malformed) - 8} more)"
+        return [f"tool log has {len(self.malformed)} unreadable line(s) at {shown}{more} "
+                f"-- the evidence is incomplete, so no result over it is conclusive"]
+
+
+def load_log(path: Path) -> ToolLog:
+    """Read a tool log, keeping a record of every line that could not be parsed."""
     path = Path(path)
     if not path.exists():
-        return []
-    records = []
-    for line in path.read_text(encoding="utf-8").splitlines():
+        return ToolLog(path=path)
+    records, malformed = [], []
+    lines = path.read_text(encoding="utf-8").splitlines()
+    for n, line in enumerate(lines, 1):
         line = line.strip()
         if not line:
             continue
         try:
             records.append(json.loads(line))
         except json.JSONDecodeError:
-            continue
-    return records
+            malformed.append(n)
+    return ToolLog(records, malformed, len(lines), path)

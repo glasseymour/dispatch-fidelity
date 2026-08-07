@@ -20,6 +20,7 @@ Usage:
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import subprocess
@@ -95,6 +96,20 @@ def check_binding(findings, only=None):
         if not raw.exists():
             findings.append(("BINDING", f"{label}: raw output missing ({rec.get('raw_output')})"))
             continue
+        # Finding #22. `gate.py` stored a SHA-256 of the raw output and nothing ever
+        # recomputed it, so the recorded evidence could be edited after the fact and
+        # this verifier would still pass. A hash written but never checked is decoration.
+        expected = rec.get("raw_output_sha256")
+        if expected:
+            actual = hashlib.sha256(raw.read_bytes()).hexdigest()
+            if actual != expected:
+                findings.append(("BINDING", f"{label}: the raw output has been modified "
+                                            f"since it was recorded"))
+                continue
+        else:
+            findings.append(("BINDING", f"{label}: the record carries no output hash, so "
+                                        f"the output cannot be tied to the run"))
+            continue
         ok += 1
     return ok, len(records)
 
@@ -118,6 +133,14 @@ def check_anchors(findings):
             findings.append(("ANCHOR", f"{name}: command failed to run ({exc})"))
             continue
         got = (proc.stdout or "") + (proc.stderr or "")
+        # Finding #22. Only the substring was checked, so a command that crashed while
+        # printing the expected text counted as an anchor holding. An anchor is a claim
+        # about a working system, not about a string appearing somewhere.
+        if proc.returncode != 0:
+            findings.append(("ANCHOR", f"{name}: the anchor command exited "
+                                       f"{proc.returncode}; a failing command cannot "
+                                       f"witness anything, even if it printed the text"))
+            continue
         if expected in got:
             ok += 1
         else:

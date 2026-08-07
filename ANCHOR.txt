@@ -6,12 +6,17 @@
 # Re-reading the output you just produced and pasting it here converts a check into a
 # transcription, which is how a suite ends up agreeing with whatever the code does.
 #
-# The two matrix figures moved in 0.2.0 because finding #16 added one positive class and
-# two negative controls. A moved anchor is a claim that something changed on purpose, and
-# the CHANGELOG entry is where that claim is argued.
+# Since 0.3.0 the anchor command must also EXIT 0. A command that crashed while printing
+# the expected text used to count as an anchor holding — finding #22.
+#
+# The matrix figures move when a finding adds a class. A moved anchor is a claim that
+# something changed on purpose, and the CHANGELOG entry is where that claim is argued.
 
-matrix_sensitivity | agentaudit selftest | sensitivity : 10/10
-matrix_specificity | agentaudit selftest | specificity : 9/9
+matrix_sensitivity | agentaudit selftest | sensitivity : 15/15
+matrix_specificity | agentaudit selftest | specificity : 11/11
 evidence_guards    | agentaudit selftest --with-evidence | ALL GUARDS HOLD
-demo_catches_lie   | agentaudit demo | NOT CLEAN -- 3 of 6 claimed tool calls have no matching execution
-demo_catches_sub   | agentaudit demo | NOT CLEAN -- 1 of 6 claimed tool calls ran, returned an error
+gate_substituted   | agentaudit selftest | G1  SUBSTITUTED reaches the exit code
+gate_unmeasured    | agentaudit selftest | G2  unmeasured run is not a pass
+gate_unproven      | agentaudit selftest | G3  unprovable binding is not BOUND
+gate_torn_log      | agentaudit selftest | G4  an unreadable log line is not a pass
+demo_all_three     | agentaudit demo | All three outcomes are as expected

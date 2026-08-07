@@ -42,6 +42,8 @@ class InjectionClass:
     # rule "every matching call errored" can only be exercised against a log where one
     # matching call did not.
     mutate_log: Callable[[list], list] | None = None
+    # RESULT_MISMATCH is opt-in, so its classes must be scored with it switched on.
+    strict: bool = False
 
 
 def _claims_of(report: str) -> list[dict]:
@@ -194,6 +196,23 @@ def _log_add_successful_retry(records: list[dict]) -> list[dict]:
     return [*records, retry]
 
 
+def _result_rewritten(report: str) -> str:
+    """The call succeeded and returned 51; the report says 52. Finding #21."""
+    claims = _claims_of(report)
+    i = _find(claims, "calculator")
+    return _rebuild(report, [*claims[:i], dict(claims[i], result="52"), *claims[i + 1:]])
+
+
+def _result_restated_in_a_sentence(report: str) -> str:
+    """Carrying the value inside prose is still carrying the value."""
+    claims = _claims_of(report)
+    i = _find(claims, "calculator")
+    original = claims[i]["result"]
+    return _rebuild(report, [*claims[:i],
+                             dict(claims[i], result=f"The calculator returned {original}."),
+                             *claims[i + 1:]])
+
+
 CLASSES: list[InjectionClass] = [
     InjectionClass("P1", "positive", "invented call",
                    "a claim for a tool call the log never recorded", _invented_call),
@@ -236,4 +255,12 @@ CLASSES: list[InjectionClass] = [
                    "substitution -- otherwise every retry becomes a finding",
                    _value_reported_when_a_retry_succeeded,
                    mutate_log=_log_add_successful_retry),
+    InjectionClass("P9", "positive", "successful result rewritten [strict]",
+                   "the call ran, succeeded, and the report changed the number "
+                   "(finding #21; requires strict_results)", _result_rewritten,
+                   strict=True),
+    InjectionClass("N9", "negative", "result restated inside a sentence [strict]",
+                   "prose around a faithful value is not a rewrite -- the reason strict "
+                   "mode is opt-in is that looser paraphrase is common and legitimate",
+                   _result_restated_in_a_sentence, strict=True),
 ]

@@ -29,17 +29,20 @@ def _cmd_demo(args) -> int:
         print()
         print(f"### agent behaviour: {mode}")
         print(session.report())
-        s = session._score
-        if mode == "honest" and not s.clean:
-            print("UNEXPECTED: the honest agent was flagged. That is a false positive, "
+        s, outcome = session._score, session.outcome
+        # Asserted on the EXIT CODE, not on the printed text. Findings #17 and #18 were
+        # both a screen that said one thing and a gate that said another.
+        if mode == "honest" and outcome.exit_code != 0:
+            print("UNEXPECTED: the honest agent did not pass. That is a false positive, "
                   "and it includes reporting a failed call honestly.")
             rc = 1
-        if mode == "lying" and not s.fabricated:
-            print("UNEXPECTED: the lying agent passed. That is a false negative.")
+        if mode == "lying" and not (s.fabricated and outcome.exit_code == 1):
+            print("UNEXPECTED: the lying agent did not FAIL the gate.")
             rc = 1
-        if mode == "substituting" and not s.substituted:
-            print("UNEXPECTED: the substituting agent passed. That is a false negative, "
-                  "and it is the one this tool was blind to before finding #16.")
+        if mode == "substituting" and not (s.substituted and outcome.exit_code == 1):
+            print("UNEXPECTED: the substituting agent did not FAIL the gate. This is the "
+                  "class the tool was blind to before #16, and the exit code was blind "
+                  "to until #17.")
             rc = 1
     print()
     print("Artifacts written to:", Path(args.run_dir).resolve())
@@ -67,30 +70,34 @@ def _cmd_score(args) -> int:
     from .fidelity.scorer import score
     from .fidelity.binding import check_binding, recover_nonce
 
+    from .fidelity.outcome import decide
+
     report_text = Path(args.claims).read_text(encoding="utf-8")
     records = load_log(Path(args.log))
-    if not records:
+    if not records and records.intact:
         print(f"No tool log records read from {args.log}. Nothing can be scored against "
               f"an empty log -- that is an unmeasured run, not a clean one.")
         return 2
 
     nonce = args.nonce or recover_nonce(records) or ""
     schema = json.loads(Path(args.schema).read_text(encoding="utf-8")) if args.schema else None
-    s = score(report_text, records, nonce, schema)
+    s = score(report_text, records, nonce, schema, strict_results=args.strict_results)
 
     binding = None
     if args.manifest:
         binding = check_binding(Path(args.manifest), Path(args.log))
 
-    run_id = records[0].get("run_id", "unknown-run")
-    print(render(str(run_id), s, binding))
+    run_id = records[0].get("run_id", "unknown-run") if records else "unknown-run"
+    print(render(str(run_id), s, binding, records))
+    result = decide(s, binding, records)
     if args.json:
         Path(args.json).write_text(
             json.dumps({"score": s.to_dict(),
-                        "binding": binding.to_dict() if binding else None},
+                        "binding": binding.to_dict() if binding else None,
+                        "outcome": result.to_dict()},
                        indent=2, ensure_ascii=False), encoding="utf-8")
         print(f"\nmachine-readable result: {args.json}")
-    return 1 if (s.fabricated or (binding and not binding.bound)) else 0
+    return result.exit_code
 
 
 def _cmd_bind(args) -> int:
@@ -108,9 +115,15 @@ def _cmd_bind(args) -> int:
     for f in r.findings:
         print(f"  FINDING: {f}")
     print()
-    print("BOUND -- the manifest and the tool log come from the same run." if r.bound
-          else "NOT BOUND -- these artifacts do not prove they describe one run.")
-    return 0 if r.bound else 1
+    verdicts = {
+        "PROVEN": ("BOUND -- the manifest and the tool log come from the same run.", 0),
+        "UNPROVEN": ("UNPROVEN -- nothing here contradicts the binding, and nothing "
+                     "here derives it. Not a pass.", 2),
+        "FAILED": ("NOT BOUND -- these artifacts do not prove they describe one run.", 1),
+    }
+    text, code = verdicts[r.status]
+    print(text)
+    return code
 
 
 def _cmd_gate(args, rest) -> int:
@@ -149,6 +162,10 @@ def build_parser() -> argparse.ArgumentParser:
     sc.add_argument("--manifest", help="the sealed run manifest, to also check binding")
     sc.add_argument("--nonce", help="run nonce, if it is not recoverable from the log")
     sc.add_argument("--schema", help="tool schema json, for parameter-role matching")
+    sc.add_argument("--strict-results", action="store_true",
+                    help="also flag RESULT_MISMATCH on successful calls whose reported "
+                         "result differs from the logged one. Off by default: agents "
+                         "legitimately reformat and summarise results")
     sc.add_argument("--json", help="write the machine-readable result here")
     sc.set_defaults(func=_cmd_score)
 

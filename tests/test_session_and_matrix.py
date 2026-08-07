@@ -23,7 +23,8 @@ def test_lying_run_is_caught(tmp_path):
     session, report = mock_agent.run("lying", run_dir=tmp_path)
     s = session.score(report)
     assert s.fabricated == 3
-    assert "NOT CLEAN" in session.report()
+    assert "FAIL" in session.report()
+    assert session.outcome.exit_code == 1
 
 
 def test_manifest_is_sealed_before_the_run(tmp_path):
@@ -51,7 +52,7 @@ def test_validation_matrix_is_fully_green():
     rows, ok = validate.run(verbose=False)
     failed = [r.key for r in rows if not r.passed]
     assert ok, f"validation matrix regressions: {failed}"
-    assert len(rows) == 19
+    assert len(rows) == 26
 
 
 def test_substituting_run_is_caught(tmp_path):

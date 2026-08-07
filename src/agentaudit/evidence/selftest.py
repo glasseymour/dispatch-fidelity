@@ -1,6 +1,6 @@
 """Self-test — the package's own regression guards.
 
-Six behaviours, each one the reason a check exists. A checker nobody exercises is a
+Ten behaviours, each one the reason a check exists. A checker nobody exercises is a
 checker nobody knows the state of; these assertions are what keep this package from
 becoming decoration.
 
@@ -59,8 +59,9 @@ def main():
     try:
         (tmp / "src.py").write_text("import os  # noqa\n\n\ndef f():\n    return 1\n",
                                     encoding="utf-8")
-        (tmp / "ANCHOR.txt").write_text(
-            f'green | "{sys.executable}" -c "print(\'2 passed\')" | 2 passed\n', encoding="utf-8")
+        green_cmd = f'"{sys.executable}" -c "print(\'2 passed\')"'
+        (tmp / "ANCHOR.txt").write_text(f"green | {green_cmd} | 2 passed\n",
+                                        encoding="utf-8")
         (tmp / "waivers.txt").write_text("", encoding="utf-8")
         for args in (["init", "-q", "."], ["config", "user.email", "t@t"],
                      ["config", "user.name", "t"], ["add", "-A"],
@@ -118,6 +119,34 @@ def main():
         r = verify(tmp)
         ok &= expect("failing run -> refuses to verify",
                      r.returncode == 1 and "recorded run FAILED" in r.stdout, r.stdout[-200:])
+
+        # --- finding #22: three gaps external review found in this module ------------
+        # 8 — the stored output hash is now recomputed, so edited evidence is caught
+        gate(tmp)
+        raw = tmp / ".verify" / "tests.raw.txt"
+        raw.write_text("2 passed\n(and something a human added later)\n", encoding="utf-8")
+        r = verify(tmp)
+        ok &= expect("edited raw output -> caught",
+                     r.returncode == 1 and "has been modified" in r.stdout, r.stdout[-260:])
+
+        # 9 — an anchor whose command CRASHES cannot hold, even if it prints the text
+        gate(tmp)
+        crash_cmd = f'"{sys.executable}" -c "print(\'2 passed\'); raise SystemExit(4)"'
+        (tmp / "ANCHOR.txt").write_text(f"crash | {crash_cmd} | 2 passed\n",
+                                        encoding="utf-8")
+        r = verify(tmp)
+        ok &= expect("anchor command exits non-zero -> finding",
+                     r.returncode == 1 and "exited 4" in r.stdout, r.stdout[-260:])
+
+        # 10 — an untracked file's CONTENT is part of the tree identity, not just its name
+        (tmp / "ANCHOR.txt").write_text(f"green | {green_cmd} | 2 passed\n",
+                                        encoding="utf-8")
+        (tmp / "scratch.py").write_text("VALUE = 1\n", encoding="utf-8")
+        gate(tmp)
+        (tmp / "scratch.py").write_text("VALUE = 2\n", encoding="utf-8")
+        r = verify(tmp)
+        ok &= expect("untracked content change -> STALE",
+                     r.returncode == 1 and "STALE" in r.stdout, r.stdout[-260:])
 
         print("\n" + ("ALL GUARDS HOLD" if ok else "SELF-TEST FAILED"))
         return 0 if ok else 1

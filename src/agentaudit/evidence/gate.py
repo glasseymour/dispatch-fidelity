@@ -80,7 +80,31 @@ def tree_digest(root: Path) -> dict:
     if head is not None:
         status = _significant(_git(root, "status", "--porcelain") or "")
         diff = _git(root, "diff", "HEAD") or ""
-        h = hashlib.sha256((status + "\x00" + diff).encode("utf-8", "replace")).hexdigest()
+        # Finding #22. `git diff HEAD` covers tracked changes only, so an UNTRACKED file
+        # contributed its name to the status line and nothing else. Two different
+        # contents under one filename produced the same digest -- and a new source file
+        # is untracked precisely while it is being written, which is when an agent is
+        # most likely to be running checks against it.
+        untracked = hashlib.sha256()
+        for line in sorted(status.splitlines()):
+            if not line.startswith("??"):
+                continue
+            rel = line[3:].strip().strip('"')
+            p = root / rel
+            untracked.update(rel.encode("utf-8", "replace"))
+            try:
+                if p.is_file():
+                    untracked.update(hashlib.sha256(p.read_bytes()).digest())
+                elif p.is_dir():
+                    for f in sorted(p.rglob("*")):
+                        if f.is_file() and not any(x in SKIP_DIRS
+                                                   for x in f.relative_to(root).parts):
+                            untracked.update(f.relative_to(root).as_posix().encode())
+                            untracked.update(hashlib.sha256(f.read_bytes()).digest())
+            except OSError:
+                untracked.update(b"<unreadable>")
+        payload = status + "\x00" + diff + "\x00" + untracked.hexdigest()
+        h = hashlib.sha256(payload.encode("utf-8", "replace")).hexdigest()
         return {"method": "git", "head": head.strip(), "dirty": bool(status.strip()),
                 "delta_sha256": h}
 

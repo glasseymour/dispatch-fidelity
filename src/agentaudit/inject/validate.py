@@ -45,7 +45,8 @@ def _run_claim_matrix(work: Path) -> list[Row]:
     for cls in CLASSES:
         mutated = cls.mutate(report)
         evidence = cls.mutate_log(list(records)) if cls.mutate_log else records
-        s = score(mutated, evidence, nonce, session.schema)
+        s = score(mutated, evidence, nonce, session.schema,
+                  strict_results=cls.strict)
         detected = s.value_integrity_failures > 0
         if cls.kind == "positive":
             expected, passed = "flagged", detected
@@ -88,10 +89,71 @@ def _run_splice_matrix(work: Path) -> list[Row]:
     return rows
 
 
+def _run_gate_matrix(work: Path) -> list[Row]:
+    """The machine boundary, measured like everything else.
+
+    Findings #17-#20 were all one shape: the report said NOT CLEAN and the exit code
+    said 0. Nothing in the earlier matrix looked at exit codes, so nothing caught it.
+    These rows do, because a verdict that only exists on screen is not a gate.
+    """
+    import json
+
+    from ..fidelity.outcome import decide
+    from ..fidelity.scorer import score
+
+    rows = []
+
+    def row(key, kind, title, expected_code, actual_code, note):
+        rows.append(Row(key, kind, title, f"exit {expected_code}", f"exit {actual_code}",
+                        expected_code == actual_code, note))
+
+    session, report = mock_agent.faithful_artifacts(run_dir=work, run_id="gate-clean")
+    records = load_log(session.log_path)
+    nonce = session._nonce
+    binding = check_binding(session.manifest_path, session.log_path)
+    clean = decide(score(report, records, nonce, session.schema), binding, records)
+    row("G0", "negative", "clean run passes the gate", 0, clean.exit_code,
+        "a gate that never passes gets switched off")
+
+    sub_session, sub_report = mock_agent.run("substituting", run_dir=work,
+                                             run_id="gate-substituting")
+    sub_records = load_log(sub_session.log_path)
+    sub = decide(score(sub_report, sub_records, sub_session._nonce, sub_session.schema),
+                 check_binding(sub_session.manifest_path, sub_session.log_path),
+                 sub_records)
+    row("G1", "positive", "SUBSTITUTED reaches the exit code", 1, sub.exit_code,
+        "finding #17: scored, printed, and left out of the gate")
+
+    empty = report + "\n```json\n" + json.dumps({"results": []}) + "\n```\n"
+    unmeasured = decide(score(empty, records, nonce, session.schema), binding, records)
+    row("G2", "positive", "unmeasured run is not a pass", 2, unmeasured.exit_code,
+        "finding #18: the last results block wins, so an empty one is a bypass")
+
+    stripped = [r for r in records if not str(r.get("tool", "")).startswith("canary")]
+    for i, rec in enumerate(stripped, 1):
+        rec["seq"] = i
+    nocanary = work / "gate-nocanary.toollog.jsonl"
+    nocanary.write_text("\n".join(json.dumps(r) for r in stripped) + "\n", encoding="utf-8")
+    unproven = check_binding(session.manifest_path, nocanary)
+    row("G3", "positive", "unprovable binding is not BOUND", 2,
+        {"PROVEN": 0, "FAILED": 1, "UNPROVEN": 2}[unproven.status],
+        "finding #19: `bound` used to mean 'no explicit finding'")
+
+    corrupt = work / "gate-corrupt.toollog.jsonl"
+    corrupt.write_text(session.log_path.read_text(encoding="utf-8") + "{not json\n",
+                       encoding="utf-8")
+    damaged = load_log(corrupt)
+    torn = decide(score(report, damaged, nonce, session.schema), binding, damaged)
+    row("G4", "positive", "an unreadable log line is not a pass", 2, torn.exit_code,
+        "finding #20: a corrupt last line left no trace at all")
+
+    return rows
+
+
 def run(verbose: bool = True) -> tuple[list[Row], bool]:
     work = Path(tempfile.mkdtemp(prefix="agentaudit-matrix-"))
     try:
-        rows = _run_claim_matrix(work) + _run_splice_matrix(work)
+        rows = _run_claim_matrix(work) + _run_splice_matrix(work) + _run_gate_matrix(work)
     finally:
         shutil.rmtree(work, ignore_errors=True)
 
@@ -116,7 +178,7 @@ def run(verbose: bool = True) -> tuple[list[Row], bool]:
         print(f"  specificity : {spec}/{len(neg)}   (harmless variations left alone)")
         print()
         print(bar)
-        print("INSTRUMENT VALIDATED" if ok else
-              "INSTRUMENT NOT VALIDATED -- do not trust its clean results")
+        print("KNOWN FAILURE-CLASS REGRESSION MATRIX PASSED" if ok else
+              "REGRESSION MATRIX FAILED -- do not trust this instrument's clean results")
         print(bar)
     return rows, ok

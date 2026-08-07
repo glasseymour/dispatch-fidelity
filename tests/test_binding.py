@@ -42,9 +42,12 @@ def test_binding_is_unprovable_without_a_canary_call(tmp_path):
 
     r = check_binding(s.manifest_path, s.log_path)
     assert r.checks["B3_nonce_commitment"] is None
-    assert r.unprovable and "UNPROVEN" in r.unprovable[0]
-    # unprovable is not a finding: nothing here says the run is unsound
-    assert r.bound
+    assert any("UNPROVEN" in u for u in r.unprovable)
+    # Finding #19 reversed what this test used to assert. Unprovable is still not a
+    # finding -- nothing here says the run is unsound -- but it is not a pass either,
+    # and the earlier `assert r.bound` wrote that collapse into the test suite.
+    assert r.status == "UNPROVEN"
+    assert not r.bound
 
 
 def test_nonce_recovery_reads_the_probe_receipt(tmp_path):
