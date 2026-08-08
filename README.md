@@ -2,6 +2,8 @@
 
 *Dispatch-fidelity auditing for agentic systems.*
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21850624.svg)](https://doi.org/10.5281/zenodo.21850624)
+
 **Did your agent actually call what it says it called?**
 
 An agentic system reports what it did. Somewhere between the tool layer and the summary,
@@ -301,12 +303,15 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 **The software** — which bytes you ran:
 
-> Varga, Z. *dispatch-fidelity v0.3.0: dispatch-fidelity auditing for agentic systems.*
-> Zenodo. https://doi.org/10.5281/zenodo.21841083
+> Varga, Z. *dispatch-fidelity: dispatch-fidelity auditing for agentic systems.* Zenodo.
+> Version DOI of the release you ran — v0.3.1 is https://doi.org/10.5281/zenodo.21850696;
+> every release from v0.3.1rc1 onward is archived automatically under the concept DOI
+> https://doi.org/10.5281/zenodo.21850624 (v0.3.0 lives in a hand-created record,
+> https://doi.org/10.5281/zenodo.21841083, which the auto series formally continues).
 >
-> Version DOI, because "which bytes you ran" is a question about one release. The concept
-> DOI `10.5281/zenodo.21841082` resolves to the **latest** version and belongs in a
-> sentence about the project, not about a result.
+> Cite the version DOI, because "which bytes you ran" is a question about one release;
+> the concept DOI resolves to the **latest** version and belongs in a sentence about the
+> project, not about a result.
 
 **The method** — what is measured and how it was validated:
 
