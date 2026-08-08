@@ -141,7 +141,7 @@ integration.
 
 ## Running many runs
 
-One score is an anecdote. A fabrication rate is a property of a system-and-workload pair,
+One score is an anecdote. A fabrication rate is a property of a system–interface–workload configuration,
 and it needs a grid: several tasks, several repetitions, fixed configuration.
 
 Use a distinct `run_id` per run, keep every manifest and log, and score them together.

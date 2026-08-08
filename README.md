@@ -21,6 +21,10 @@ dispatch-audit demo
 software DOI and the published checksum. `git+…` would build whatever `main` happens to
 be, which is a different artifact carrying the same version number; see finding #28.)*
 
+> **Compatibility note.** v0.3.0 is intended for **sequential tool execution**. Parallel
+> in-process recording is corrected on the current development branch (finding #29,
+> found by the LangGraph integration probe) and ships in v0.3.1.
+
 The demo runs three scripted agents offline — no key, no network, no model.
 
 | Agent | Result |
@@ -250,7 +254,7 @@ honest answer is that you do not need this for that path.
 
 ## Interpreting a number
 
-A fabrication rate is a property of a system-and-workload pair, not a grade. In the study
+A fabrication rate is a property of a system–interface–workload configuration, not a grade. In the study
 behind this tool the registered primary outcome was **10 / 1250 = 0.80%** [0.44–1.47%],
 and the pre-registered hypothesis that the rate would rise with the number of agents was
 **not supported** (Cochran–Armitage z = −1.106, p = 0.269).
@@ -276,9 +280,9 @@ artifact set, seal chain and release gate:
 > Varga, Z. *Who Validates the Validator? Instrument failure in the shape of the
 > hypothesis.* Zenodo. https://doi.org/10.5281/zenodo.21812041
 
-The deposit's correction protocol documents fifteen audit findings about the instrument
-itself, including the receipt rules and the binding check reimplemented here. Reading it
-is the fastest way to decide how much to trust this code.
+The original audit documented findings #1–#15; the shared correction sequence now
+continues across the method deposit and this repository's CHANGELOG. Reading the
+protocol is the fastest way to decide how much to trust this code.
 
 ---
 
@@ -308,6 +312,14 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 Cite both if you used the tool to produce a result. They answer different questions, and
 a reader checking your number needs each of them.
+
+## Disclosure
+
+This work is part of the author's independently developed and publicly documented
+research programme on measurement, verifiability and instrument validation, conducted
+and published in a personal research capacity. The views and conclusions are solely the
+author's own and do not represent any employer or institution. Full statement:
+[DISCLOSURE.md](DISCLOSURE.md).
 
 ## License
 

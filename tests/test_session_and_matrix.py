@@ -74,3 +74,12 @@ def test_an_honestly_reported_failure_stays_clean(tmp_path):
     assert "ERROR:ValueError" in report
     s = session.score(report)
     assert s.substituted == 0 and s.clean
+
+
+def test_a_passing_outcome_carries_no_reasons(tmp_path):
+    """A mutant that appended a spurious reason to every measured run survived,
+    because nothing asserted that a PASS outcome's reason list is empty."""
+    session, report = mock_agent.run("honest", run_dir=tmp_path)
+    session.score(report)
+    assert session.outcome.overall == "PASS"
+    assert session.outcome.reasons == []

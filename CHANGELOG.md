@@ -10,6 +10,35 @@ at 1 here would make the tool look younger than its correction history.
 
 ## Unreleased
 
+### Mutation analysis — a test-adequacy baseline, hardening, and rerun
+
+Full write-up in [docs/mutation-testing.md](docs/mutation-testing.md); every figure is
+derived from the raw run logs by `tools/collect_mutation_results.py` into
+`tools/mutation_results.json`, beside the declared operator set in
+`tools/mutation_regime.json`.
+
+Three passes over the same gauntlet: a retained **78.5%** baseline (102/130 detected,
+pre-hardening code), then **89.4%** and **93.9%** over the post-hardening 132 sites —
+the hardening itself added two mutation points. Survivor triage produced one structural
+strengthening and a set of test-contract repairs:
+
+- **Binding status is now derived canonically from the tri-state check values** through
+  a single `add_check` path; the explanatory lists explain the verdict and no longer
+  participate in deciding it. A constructive probe ran first: across all 256
+  combinations of eight structural input dimensions, no enumerated input to the shipped
+  code produced a displayed check contradicting the verdict — `check_binding` had always
+  written the two together, and nothing enforced it. Regression coverage pins the
+  `PROVEN`/`UNPROVEN`/`FAILED` mappings and the precedence of contradicted over
+  incomplete evidence.
+- **Test-contract repairs, no finding numbers**: exact counter values, the
+  `strict_results=False` default (a published behavioural promise that had no test),
+  single-claim clean runs, parser boundaries, the empty-receipt fallback, strict-mode
+  classification of errored calls, and insensitivity to the LOGGED argument insertion
+  order. Triage of pass 2 found five of the new tests themselves too weak to kill their
+  targets; pass 3 exists because the loop was applied to its own repairs.
+- The eight remaining survivors are **judged on review** — per-mutant register in
+  `tools/mutation_triage.json` — and no adjusted score is derived from them.
+
 ### Finding #29 — the proxy lost executed calls under parallelism
 
 Found by the LangGraph integration probe, before any example was written. `ToolNode`

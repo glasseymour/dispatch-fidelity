@@ -1,0 +1,132 @@
+
+=== scorer.py: 85 mutation sites ===
+  killed 58 / survived 27 / unparseable 0
+  survivors vs OWN tests (27):
+    const_bool@53:True
+    bool@73:Or
+    bool@95:And
+    bool@96:And
+    cmp@125:In
+    bool@125:And
+    const_bool@166:False
+    const_bool@170:False
+    not@200:Not
+    const_bool@201:False
+    const_int@202:0
+    not@203:Not
+    bool@203:Or
+    const_bool@204:False
+    bool@205:Or
+    not@206:Not
+    const_bool@207:False
+    cmp@208:NotIn
+    cmp@223:In
+    const_int@236:0
+    bin@260:Add
+    const_int@264:0
+    const_bool@285:False
+    const_int@307:1
+    not@326:Not
+    const_int@329:0
+    const_int@330:1
+  re-checking survivors against the full suite ...
+    SURVIVES FULL SUITE: const_bool@53:True
+    SURVIVES FULL SUITE: bool@73:Or
+    SURVIVES FULL SUITE: bool@95:And
+    SURVIVES FULL SUITE: bool@96:And
+    SURVIVES FULL SUITE: cmp@125:In
+    SURVIVES FULL SUITE: bool@125:And
+    SURVIVES FULL SUITE: const_bool@166:False
+    SURVIVES FULL SUITE: const_bool@170:False
+    killed by full suite: not@200:Not
+    SURVIVES FULL SUITE: const_bool@201:False
+    killed by full suite: const_int@202:0
+    killed by full suite: not@203:Not
+    SURVIVES FULL SUITE: bool@203:Or
+    killed by full suite: const_bool@204:False
+    killed by full suite: bool@205:Or
+    killed by full suite: not@206:Not
+    SURVIVES FULL SUITE: const_bool@207:False
+    killed by full suite: cmp@208:NotIn
+    SURVIVES FULL SUITE: cmp@223:In
+    SURVIVES FULL SUITE: const_int@236:0
+    killed by full suite: bin@260:Add
+    killed by full suite: bin@260:Add
+    SURVIVES FULL SUITE: const_int@264:0
+    killed by full suite: const_int@264:0
+    SURVIVES FULL SUITE: const_bool@285:False
+    SURVIVES FULL SUITE: const_int@307:1
+    killed by full suite: not@326:Not
+    killed by full suite: const_int@329:0
+    SURVIVES FULL SUITE: const_int@330:1
+
+=== binding.py: 30 mutation sites ===
+  killed 20 / survived 10 / unparseable 0
+  survivors vs OWN tests (10):
+    cmp@121:Eq
+    const_bool@142:True
+    const_int@147:1
+    cmp@147:LtE
+    bool@147:And
+    const_int@148:1
+    not@175:Not
+    cmp@175:Eq
+    bool@175:Or
+    not@180:Not
+  re-checking survivors against the full suite ...
+    SURVIVES FULL SUITE: cmp@121:Eq
+    SURVIVES FULL SUITE: const_bool@142:True
+    SURVIVES FULL SUITE: const_int@147:1
+    SURVIVES FULL SUITE: cmp@147:LtE
+    SURVIVES FULL SUITE: bool@147:And
+    SURVIVES FULL SUITE: const_int@148:1
+    killed by full suite: not@175:Not
+    SURVIVES FULL SUITE: cmp@175:Eq
+    SURVIVES FULL SUITE: bool@175:Or
+    killed by full suite: not@180:Not
+
+=== outcome.py: 15 mutation sites ===
+  killed 12 / survived 3 / unparseable 0
+  survivors vs OWN tests (3):
+    not@64:Not
+    const_int@88:0
+    const_int@93:0
+  re-checking survivors against the full suite ...
+    SURVIVES FULL SUITE: not@64:Not
+    SURVIVES FULL SUITE: const_int@88:0
+    SURVIVES FULL SUITE: const_int@93:0
+
+==========================================================================
+MUTATION GAUNTLET — 12.4 min
+28 mutant(s) survive the FULL test suite:
+  scorer.py: const_bool@53:True
+  scorer.py: bool@73:Or
+  scorer.py: bool@95:And
+  scorer.py: bool@96:And
+  scorer.py: cmp@125:In
+  scorer.py: bool@125:And
+  scorer.py: const_bool@166:False
+  scorer.py: const_bool@170:False
+  scorer.py: const_bool@201:False
+  scorer.py: bool@203:Or
+  scorer.py: const_bool@207:False
+  scorer.py: cmp@223:In
+  scorer.py: const_int@236:0
+  scorer.py: const_int@264:0
+  scorer.py: const_bool@285:False
+  scorer.py: const_int@307:1
+  scorer.py: const_int@330:1
+  binding.py: cmp@121:Eq
+  binding.py: const_bool@142:True
+  binding.py: const_int@147:1
+  binding.py: cmp@147:LtE
+  binding.py: bool@147:And
+  binding.py: const_int@148:1
+  binding.py: cmp@175:Eq
+  binding.py: bool@175:Or
+  outcome.py: not@64:Not
+  outcome.py: const_int@88:0
+  outcome.py: const_int@93:0
+Each one is a small deliberate defect no test notices — a finding
+candidate after triage for equivalence.
+==========================================================================

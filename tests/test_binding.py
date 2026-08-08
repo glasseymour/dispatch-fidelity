@@ -84,3 +84,94 @@ def test_concurrent_calls_lose_nothing(tmp_path):
     assert len(records) == 64, "an executed call vanished from the log"
     assert sorted(r["seq"] for r in records) == list(range(1, 65))
     assert {r["args"]["n"] for r in records} == set(range(64))
+
+
+def test_a_displayed_false_check_is_load_bearing():
+    """From mutation analysis. In the shipped code every False check value was
+    accompanied by a finding -- verified constructively across 256 structural input
+    combinations -- but nothing enforced the coupling, so an edit could flip a displayed
+    check with no effect on the verdict. The display and the gate now derive from one
+    state: a False check makes the binding FAILED even if no finding was recorded."""
+    from dispatch_fidelity.fidelity.binding import BindingResult
+
+    r = BindingResult(run_id="r", checks={"B1_manifest_self_identifies": False})
+    assert r.status == "FAILED"
+    assert not r.bound
+
+    r2 = BindingResult(run_id="r", checks={"B3_nonce_commitment": None})
+    assert r2.status == "UNPROVEN"
+
+    r3 = BindingResult(run_id="r", checks={"B1_manifest_self_identifies": True})
+    assert r3.status == "PROVEN"
+
+
+def test_a_mixed_id_log_shows_B2_false_and_names_the_reason(tmp_path):
+    """The B2 check VALUE and its finding are asserted separately, so neither the
+    threshold nor the displayed value can drift without a test noticing."""
+    import json
+
+    from dispatch_fidelity.fidelity.nonce import new_nonce, seal_manifest
+
+    nonce = new_nonce()
+    mp = seal_manifest("mix", nonce, tmp_path)
+    recs = [
+        {"seq": 1, "run_id": "mix", "tool": "canary_probe", "args": {},
+         "result": f"CANARY[A]:{nonce}"},
+        {"seq": 2, "run_id": "other", "tool": "t", "args": {}, "result": "x"},
+    ]
+    lp = tmp_path / "mix.toollog.jsonl"
+    lp.write_text("\n".join(json.dumps(r) for r in recs) + "\n", encoding="utf-8")
+
+    r = check_binding(mp, lp)
+    assert r.checks["B2_log_self_identifies"] is False
+    assert any("mixes run ids" in f for f in r.findings)
+    assert r.status == "FAILED"
+
+
+def test_status_derives_canonically_from_the_tri_state_checks():
+    """The four mappings, plus precedence: contradicted evidence beats incomplete."""
+    from dispatch_fidelity.fidelity.binding import BindingResult
+
+    assert BindingResult("r", checks={"a": True, "b": True}).status == "PROVEN"
+    assert BindingResult("r", checks={"a": True, "b": False}).status == "FAILED"
+    assert BindingResult("r", checks={"a": False, "b": None}).status == "FAILED"
+    assert BindingResult("r", checks={"a": True, "b": None}).status == "UNPROVEN"
+
+
+def test_explanatory_lists_do_not_override_the_checks():
+    """The lists explain the verdict; the checks decide it."""
+    from dispatch_fidelity.fidelity.binding import BindingResult
+
+    r = BindingResult("r", checks={"a": True}, findings=["stray narrative"])
+    assert r.status == "PROVEN"
+
+
+def test_add_check_couples_value_and_explanation():
+    from dispatch_fidelity.fidelity.binding import BindingResult
+
+    r = BindingResult("r")
+    r.add_check("B1", False, "why it failed")
+    r.add_check("B3", None, "why it is unprovable")
+    r.add_check("B4", True, "never recorded for a pass")
+    assert r.checks == {"B1": False, "B3": None, "B4": True}
+    assert r.findings == ["why it failed"]
+    assert r.unprovable == ["why it is unprovable"]
+    assert r.status == "FAILED"
+
+
+def test_every_false_check_carries_an_explanation_end_to_end(tmp_path):
+    """Across the real pipeline, a False check never appears bare."""
+    import json
+
+    from dispatch_fidelity.fidelity.nonce import new_nonce, seal_manifest
+
+    nonce = new_nonce()
+    mp = seal_manifest("e2e", nonce, tmp_path)
+    recs = [{"seq": 1, "run_id": "someone-else", "tool": "t", "args": {}, "result": "x"}]
+    lp = tmp_path / "e2e.toollog.jsonl"
+    lp.write_text("\n".join(json.dumps(x) for x in recs) + "\n", encoding="utf-8")
+
+    r = check_binding(mp, lp)
+    false_checks = [k for k, v in r.checks.items() if v is False]
+    assert false_checks and r.findings, "a False check must be explained"
+    assert r.status == "FAILED"

@@ -55,28 +55,42 @@ class BindingResult:
     unprovable: list = field(default_factory=list)
     findings: list = field(default_factory=list)
 
+    def add_check(self, name: str, value, explanation: str | None = None) -> None:
+        """Record a check value and its explanation in one move.
+
+        The status derives from the tri-state check values alone; the `findings` and
+        `unprovable` lists EXPLAIN the verdict, they do not decide it. This helper keeps
+        the two coupled: a False or None written through it always carries its
+        explanation.
+        """
+        self.checks[name] = value
+        if value is False and explanation:
+            self.findings.append(explanation)
+        elif value is None and explanation:
+            self.unprovable.append(explanation)
+
     @property
     def status(self) -> str:
-        """PROVEN, UNPROVEN or FAILED -- three states, because there are three.
+        """PROVEN, UNPROVEN or FAILED -- derived canonically from the check values.
 
-        Finding #19, and it reverses an earlier decision in this file. `bound` used to
-        mean "no explicit finding", which made an UNPROVEN run indistinguishable from a
-        proven one at every machine boundary. The documentation drew the distinction
-        correctly and the code collapsed it, which is the worse of the two ways to be
-        inconsistent.
+        Finding #19 established the three states (an unprovable binding is not BOUND;
+        the sharpest case was a manifest with an EMPTY tool log printing BOUND over
+        evidence containing no evidence). Mutation analysis then showed the check values
+        and the explanatory lists lived on separate derivation paths: the data model
+        permitted a failed displayed check and a PROVEN status to coexist when the
+        corresponding explanatory entry was absent. No misclassified end-to-end run was
+        observed -- `check_binding` always wrote both together -- but nothing enforced
+        it.
 
-        The sharpest case: a manifest with an EMPTY tool log passed every check. B1 held,
-        an empty sequence is trivially gap-free, B4 and B5 have nothing to contradict, and
-        B3 was merely unprovable -- so `bind` printed BOUND over evidence containing no
-        evidence. It now returns UNPROVEN, which exits 2, not 0.
-
-        This matters most behind an MCP relay, where the documentation already says the
-        canary cannot be injected and B3 will be unprovable. Every such run was reporting
-        a successful binding.
+        The tri-state check values are now the single source: any False is FAILED, any
+        None (with no False) is UNPROVEN, all True is PROVEN. False takes precedence
+        over None because contradicted evidence is a stronger claim than incomplete
+        evidence. The text lists explain; they do not override.
         """
-        if self.findings:
+        values = tuple(self.checks.values())
+        if any(v is False for v in values):
             return FAILED
-        if any(v is None for v in self.checks.values()):
+        if any(v is None for v in values):
             return UNPROVEN
         return PROVEN
 
@@ -118,9 +132,8 @@ def check_binding(manifest_path: Path, log_path: Path, nonce_pattern=None) -> Bi
     r = BindingResult(run_id=run_id)
 
     stem = manifest_path.name.replace(".manifest.json", "")
-    r.checks["B1_manifest_self_identifies"] = (stem == run_id)
-    if stem != run_id:
-        r.findings.append(f"B1: manifest run_id {run_id!r} does not match filename {stem!r}")
+    r.add_check("B1_manifest_self_identifies", stem == run_id,
+                f"B1: manifest run_id {run_id!r} does not match filename {stem!r}")
 
     # Finding #24. Damage to the log used to enter `findings`, which made the binding
     # FAILED, which `decide` treats as a hard failure -- so the same torn log produced
@@ -172,13 +185,11 @@ def check_binding(manifest_path: Path, log_path: Path, nonce_pattern=None) -> Bi
                 "commitment -- these two files are not from the same run"
             )
 
-    r.checks["B4_manifest_log_agree"] = (not log_ids or log_ids == {run_id})
-    if log_ids and log_ids != {run_id}:
-        r.findings.append(f"B4: manifest run_id {run_id!r} absent from the tool log")
+    r.add_check("B4_manifest_log_agree", not log_ids or log_ids == {run_id},
+                f"B4: manifest run_id {run_id!r} absent from the tool log")
 
     stray = [rec.get("seq") for rec in records if str(rec.get("run_id")) != run_id]
-    r.checks["B5_no_stray_records"] = not stray
-    if stray:
-        r.findings.append(f"B5: {len(stray)} log record(s) carry a different run id")
+    r.add_check("B5_no_stray_records", not stray,
+                f"B5: {len(stray)} log record(s) carry a different run id")
 
     return r

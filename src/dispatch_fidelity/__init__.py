@@ -13,8 +13,8 @@ The short version of the method:
 
 Provenance: the method and its correction history come from the Dispatch Fidelity
 Benchmark, a pre-registered measurement (OSF 4rgey) deposited at
-https://doi.org/10.5281/zenodo.21812041 -- where fifteen audit findings were recorded
-about the instrument itself, and not one of them was caught by an aggregate metric.
+https://doi.org/10.5281/zenodo.21812041 -- whose correction protocol records the
+instrument's own audit findings, not one of which was caught by an aggregate metric.
 """
 from .fidelity import (
     AuditSession,

@@ -102,3 +102,55 @@ def test_install_instructions_do_not_point_at_a_moving_target():
     if install.startswith("http"):
         assert f"v{__version__}/" in install, (
             "the release URL must name the version this repository is at")
+
+
+# ---------------------------------------------------------------- disclosure surfaces
+def _flat(text: str) -> str:
+    """Whitespace-normalised, so a sentence match survives line wrapping."""
+    return " ".join(text.split())
+
+
+DISCLOSURE = _flat((ROOT / "DISCLOSURE.md").read_text(encoding="utf-8"))
+ZENODO = _flat((ROOT / ".zenodo.json").read_text(encoding="utf-8"))
+README_FLAT = _flat(README)
+CITATION_FLAT = _flat(CITATION)
+
+LOAD_BEARING = [
+    "conducted and published in a personal research capacity",
+    "The views and conclusions are solely the author's own and do not represent any "
+    "employer or institution",
+    "contain no non-public institutional information",
+]
+
+
+def test_disclosure_load_bearing_sentences_agree_across_surfaces():
+    """One voice on every surface. The cheapest hit for a bad-faith reader is two
+    disclosure statements that contradict each other, so the canonical sentences are
+    checked into every surface that carries one."""
+    for sentence in LOAD_BEARING:
+        assert sentence in DISCLOSURE, f"canonical source lost: {sentence[:40]}"
+        assert sentence in ZENODO, f".zenodo.json diverged: {sentence[:40]}"
+    # the README carries the excerpt: capacity + non-representation
+    for sentence in LOAD_BEARING[:2]:
+        assert sentence in README_FLAT, f"README excerpt diverged: {sentence[:40]}"
+
+
+def test_no_institution_is_named_on_any_public_surface():
+    """The disclosure separates roles without naming them; a named institution would
+    re-create the machine-indexable association the wording exists to avoid."""
+    for name, text in (("DISCLOSURE.md", DISCLOSURE), (".zenodo.json", ZENODO),
+                       ("README.md", README_FLAT), ("CITATION.cff", CITATION_FLAT)):
+        for term in ("Prime Minister", "Hungarian Government", "Miniszterelnökség"):
+            assert term not in text, f"{name} names an institution: {term}"
+
+
+def test_mutation_prose_numbers_are_derived_not_typed():
+    """The three-pass figures quoted in docs/mutation-testing.md must match the
+    machine-derived results file, which is itself parsed from the raw logs."""
+    import json
+    results = json.loads((ROOT / "tools" / "mutation_results.json").read_text(encoding="utf-8"))
+    prose = (ROOT / "docs" / "mutation-testing.md").read_text(encoding="utf-8")
+    for p in results["passes"]:
+        assert f"{p['detected_pct']}%" in prose, f"pass rate {p['detected_pct']}% not quoted"
+        assert str(p["sites_total"]) in prose
+        assert str(p["survivors_full_suite"]) in prose

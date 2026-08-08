@@ -1,0 +1,52 @@
+
+=== scorer.py: 85 mutation sites ===
+  killed 79 / survived 6 / unparseable 0
+  survivors vs OWN tests (6):
+    const_bool@53:True
+    const_bool@166:False
+    const_bool@170:False
+    const_bool@201:False
+    const_bool@207:False
+    cmp@223:In
+  re-checking survivors against the full suite ...
+    SURVIVES FULL SUITE: const_bool@53:True
+    SURVIVES FULL SUITE: const_bool@166:False
+    SURVIVES FULL SUITE: const_bool@170:False
+    SURVIVES FULL SUITE: const_bool@201:False
+    SURVIVES FULL SUITE: const_bool@207:False
+    SURVIVES FULL SUITE: cmp@223:In
+
+=== binding.py: 32 mutation sites ===
+  killed 30 / survived 2 / unparseable 0
+  survivors vs OWN tests (2):
+    not@182:Not
+    not@187:Not
+  re-checking survivors against the full suite ...
+    killed by full suite: not@182:Not
+    killed by full suite: not@187:Not
+
+=== outcome.py: 15 mutation sites ===
+  killed 12 / survived 3 / unparseable 0
+  survivors vs OWN tests (3):
+    not@64:Not
+    const_int@88:0
+    const_int@93:0
+  re-checking survivors against the full suite ...
+    killed by full suite: not@64:Not
+    SURVIVES FULL SUITE: const_int@88:0
+    SURVIVES FULL SUITE: const_int@93:0
+
+==========================================================================
+MUTATION GAUNTLET — 7.3 min
+8 mutant(s) survive the FULL test suite:
+  scorer.py: const_bool@53:True
+  scorer.py: const_bool@166:False
+  scorer.py: const_bool@170:False
+  scorer.py: const_bool@201:False
+  scorer.py: const_bool@207:False
+  scorer.py: cmp@223:In
+  outcome.py: const_int@88:0
+  outcome.py: const_int@93:0
+Each one is a small deliberate defect no test notices — a finding
+candidate after triage for equivalence.
+==========================================================================

@@ -1,0 +1,70 @@
+
+=== scorer.py: 85 mutation sites ===
+  killed 76 / survived 9 / unparseable 0
+  survivors vs OWN tests (9):
+    const_bool@53:True
+    bool@73:Or
+    const_bool@166:False
+    const_bool@170:False
+    const_bool@201:False
+    bool@203:Or
+    const_bool@207:False
+    cmp@223:In
+    const_bool@285:False
+  re-checking survivors against the full suite ...
+    SURVIVES FULL SUITE: const_bool@53:True
+    SURVIVES FULL SUITE: bool@73:Or
+    SURVIVES FULL SUITE: const_bool@166:False
+    SURVIVES FULL SUITE: const_bool@170:False
+    SURVIVES FULL SUITE: const_bool@201:False
+    SURVIVES FULL SUITE: bool@203:Or
+    SURVIVES FULL SUITE: const_bool@207:False
+    SURVIVES FULL SUITE: cmp@223:In
+    SURVIVES FULL SUITE: const_bool@285:False
+
+=== binding.py: 32 mutation sites ===
+  killed 27 / survived 5 / unparseable 0
+  survivors vs OWN tests (5):
+    const_int@154:1
+    bool@154:And
+    const_int@155:1
+    not@182:Not
+    not@187:Not
+  re-checking survivors against the full suite ...
+    SURVIVES FULL SUITE: const_int@154:1
+    SURVIVES FULL SUITE: bool@154:And
+    SURVIVES FULL SUITE: const_int@155:1
+    killed by full suite: not@182:Not
+    killed by full suite: not@187:Not
+
+=== outcome.py: 15 mutation sites ===
+  killed 12 / survived 3 / unparseable 0
+  survivors vs OWN tests (3):
+    not@64:Not
+    const_int@88:0
+    const_int@93:0
+  re-checking survivors against the full suite ...
+    killed by full suite: not@64:Not
+    SURVIVES FULL SUITE: const_int@88:0
+    SURVIVES FULL SUITE: const_int@93:0
+
+==========================================================================
+MUTATION GAUNTLET — 8.2 min
+14 mutant(s) survive the FULL test suite:
+  scorer.py: const_bool@53:True
+  scorer.py: bool@73:Or
+  scorer.py: const_bool@166:False
+  scorer.py: const_bool@170:False
+  scorer.py: const_bool@201:False
+  scorer.py: bool@203:Or
+  scorer.py: const_bool@207:False
+  scorer.py: cmp@223:In
+  scorer.py: const_bool@285:False
+  binding.py: const_int@154:1
+  binding.py: bool@154:And
+  binding.py: const_int@155:1
+  outcome.py: const_int@88:0
+  outcome.py: const_int@93:0
+Each one is a small deliberate defect no test notices — a finding
+candidate after triage for equivalence.
+==========================================================================

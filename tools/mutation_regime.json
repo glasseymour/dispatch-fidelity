@@ -1,0 +1,37 @@
+{
+  "schema": "dispatch-fidelity/mutation-regime/1",
+  "appended": "2026-08-08",
+  "why": [
+    "A mutation score is only interpretable beside the operator set that produced it,",
+    "the same way the deposit's rates are only interpretable beside their measurement",
+    "regime. Someone measuring with mutmut or cosmic-ray will get a different number;",
+    "this file is what the difference is anchored to."
+  ],
+  "runner": "tools/mutation_gauntlet.py",
+  "targets": {
+    "scorer.py": {"own_tests": ["tests/test_scorer.py"]},
+    "binding.py": {"own_tests": ["tests/test_binding.py"]},
+    "outcome.py": {"own_tests": ["tests/test_cli_and_adapters.py"]}
+  },
+  "operators": {
+    "cmp": "comparison operator swap: == <-> !=, < <-> >=, <= <-> >, in <-> not in, is <-> is not",
+    "bool": "boolean operator swap: and <-> or",
+    "bin": "arithmetic swap: + <-> -",
+    "not": "removal of a `not`",
+    "const_bool": "boolean constant flip: True <-> False",
+    "const_int": "integer constant perturbation (+1) for values in {0, 1, 16}"
+  },
+  "protocol": [
+    "single-point mutants, one at a time, applied to the source on disk;",
+    "a mutant is killed if the target's OWN test files fail (fast pass);",
+    "every survivor of the fast pass is re-run against the FULL suite;",
+    "a hang counts as killed; the original source is restored after every mutant"
+  ],
+  "caveats": [
+    "The score is bounded by this operator set: statement deletion, exception-type",
+    "swaps and string mutations are not attempted, so the true survivor count under a",
+    "richer operator set is >= the one reported here.",
+    "Equivalence of a surviving mutant is undecidable in general; survivors are judged",
+    "equivalent ON REVIEW, and that judgement is recorded, not asserted as fact."
+  ]
+}

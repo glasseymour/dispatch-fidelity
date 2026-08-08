@@ -1,6 +1,6 @@
 {
   "title": "dispatch-fidelity: dispatch-fidelity auditing for agentic systems",
-  "description": "<p>Measures whether an agentic system's claim that a tool was called corresponds to an execution that actually happened. Ground truth comes from an out-of-band logging proxy with a per-run canary nonce committed before execution; scoring is deterministic; a run-binding check proves the manifest and the tool log come from the same run.</p><p>Three outcomes with distinct exit codes &mdash; PASS, FAIL and INCONCLUSIVE &mdash; so that missing or damaged evidence is represented explicitly rather than collapsed into either neighbour. Ships a fault-injection matrix of declared regression cases, including negative controls, so the instrument can be validated before it is trusted.</p><p>Reference implementation of the method deposited as the Dispatch Fidelity Benchmark (concept DOI 10.5281/zenodo.21812041, pre-registration OSF 4rgey). The correction protocol numbering is continuous between the two: the deposit records findings 1&ndash;15 and 26, the software CHANGELOG records 16&ndash;25.</p>",
+  "description": "<p>Measures whether an agentic system's claim that a tool was called corresponds to an execution that actually happened. Ground truth comes from an out-of-band logging proxy with a per-run canary nonce committed before execution; scoring is deterministic; a run-binding check proves the manifest and the tool log come from the same run.</p><p>Three outcomes with distinct exit codes &mdash; PASS, FAIL and INCONCLUSIVE &mdash; so that missing or damaged evidence is represented explicitly rather than collapsed into either neighbour. Ships a fault-injection matrix of declared regression cases, including negative controls, so the instrument can be validated before it is trusted.</p><p>Reference implementation of the method deposited as the Dispatch Fidelity Benchmark (concept DOI 10.5281/zenodo.21812041, pre-registration OSF 4rgey). The correction sequence is shared with the method deposit; provenance and disposition for software findings are recorded in the bundled CHANGELOG and REVIEW_PROVENANCE files.</p>",
   "upload_type": "software",
   "license": "Apache-2.0",
   "access_right": "open",
@@ -8,7 +8,6 @@
   "creators": [
     {
       "name": "Varga, Zoltán",
-      "affiliation": "Independent researcher",
       "orcid": "0009-0003-1020-834X"
     }
   ],
@@ -38,5 +37,5 @@
       "scheme": "url"
     }
   ],
-  "notes": "Conducted independently in a personal capacity. The views expressed are solely those of the author and do not represent the author's employer, the Prime Minister's Office, or the Hungarian Government. No government data or institutional research resources were used. Findings 16-25 were identified during model-assisted external review and reproduced, classified and implemented by the author; see REVIEW_PROVENANCE.md."
+  "notes": "This work is part of the author's independently developed and publicly documented research programme on measurement, verifiability and instrument validation, conducted and published in a personal research capacity. The views and conclusions are solely the author's own and do not represent any employer or institution. The published materials contain no non-public institutional information and make no claim of institutional endorsement. Model-assisted review provenance and the author's disposition of resulting findings are documented in REVIEW_PROVENANCE.md."
 }

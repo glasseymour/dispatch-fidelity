@@ -1,0 +1,49 @@
+{
+  "schema": "dispatch-fidelity/mutation-triage/1",
+  "appended": "2026-08-08",
+  "classes": {
+    "A1": "judged equivalent on the valid input domain (no observable behaviour change)",
+    "A2": "currently unreachable under the documented contract; may become reachable if the contract widens",
+    "A3": "representation or display content only; no verdict or gate effect"
+  },
+  "note": [
+    "Equivalence is undecidable in general; every entry here is a JUDGEMENT recorded",
+    "for review, not an asserted fact. A2 entries are deliberately NOT removed from",
+    "any denominator: an unreachable branch can become reachable when the input",
+    "contract widens, so the raw score is reported and no adjusted score is derived",
+    "from this register."
+  ],
+  "final_pass_survivors": [
+    {"site": "scorer.py cmp/sort const_bool@53", "class": "A1",
+     "reason": "sort_keys flip over an input the comprehension already sorted; output bytes identical"},
+    {"site": "scorer.py const_bool@166", "class": "A2",
+     "reason": "guard return in is_silent_substitution; unreachable from score(), which only calls it with non-empty candidates"},
+    {"site": "scorer.py const_bool@170", "class": "A2",
+     "reason": "guard return on the all-errored condition edge; unreachable with the argument combinations the pipeline constructs"},
+    {"site": "scorer.py const_bool@201", "class": "A2",
+     "reason": "None-valued claimed_result guard; callers always pass str(claim.get(...)), never None"},
+    {"site": "scorer.py const_bool@207", "class": "A2",
+     "reason": "empty-normalised-claim guard edge; pipeline inputs cannot reach it with the mutated value observable"},
+    {"site": "scorer.py cmp@223", "class": "A3",
+     "reason": "verdict-tuple membership in Verdict.to_dict; controls whether claimed_result appears in the DETAIL dict, carries no verdict"},
+    {"site": "outcome.py const_int@88", "class": "A2",
+     "reason": "getattr duck-typing default for `mismatched`; every real DispatchScore carries the attribute"},
+    {"site": "outcome.py const_int@93", "class": "A2",
+     "reason": "same duck-typing default at the hard-failure disjunction"}
+  ],
+  "actionable_survivors_resolved_in_passes_2_and_3": {
+    "structural": [
+      "binding: displayed check values and the status lived on separate derivation paths; status is now derived canonically from the tri-state checks via add_check (constructive probe first: 256 combinations of eight structural input dimensions, no enumerated input produced a displayed check contradicting the verdict)"
+    ],
+    "test_contract_gaps": [
+      "exact counter values (canary_claimed, mismatched) asserted nowhere",
+      "strict_results=False default -- a published behavioural promise -- untested",
+      "single-claim clean run never scored",
+      "extract_claims malformed-shape boundaries untested",
+      "receipt fallback with an empty logged receipt untested",
+      "strict mode vs errored-call classification untested",
+      "role matching vs LOGGED argument insertion order untested",
+      "PASS outcome's empty reason list unasserted"
+    ]
+  }
+}

@@ -1,0 +1,116 @@
+{
+  "schema": "dispatch-fidelity/mutation-results/1",
+  "collected": "2026-08-08",
+  "regime": "tools/mutation_regime.json",
+  "environment": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python": "3.12.10",
+    "note": "environment recorded at collection time on the machine that ran the passes; future passes should record it per run"
+  },
+  "note": [
+    "Pass 1 ran over the pre-hardening code; the binding coupling hardening",
+    "itself added two mutation points, so passes 2 and 3 ran over the larger",
+    "site set. Detection percentages are therefore computed against each",
+    "pass's own denominator, and the baseline is retained unchanged."
+  ],
+  "passes": [
+    {
+      "log_file": "mutation_run.log",
+      "log_sha256": "e84446c93018d9d247e9c491371aed204d85c7261e3a2a1d194dd690b7555d36",
+      "sites_per_target": {
+        "scorer.py": 85,
+        "binding.py": 30,
+        "outcome.py": 15
+      },
+      "sites_total": 130,
+      "survivors_full_suite": 28,
+      "detected": 102,
+      "detected_pct": 78.5,
+      "runtime_min": 12.4,
+      "survivor_list": [
+        "scorer.py: const_bool@53:True",
+        "scorer.py: bool@73:Or",
+        "scorer.py: bool@95:And",
+        "scorer.py: bool@96:And",
+        "scorer.py: cmp@125:In",
+        "scorer.py: bool@125:And",
+        "scorer.py: const_bool@166:False",
+        "scorer.py: const_bool@170:False",
+        "scorer.py: const_bool@201:False",
+        "scorer.py: bool@203:Or",
+        "scorer.py: const_bool@207:False",
+        "scorer.py: cmp@223:In",
+        "scorer.py: const_int@236:0",
+        "scorer.py: const_int@264:0",
+        "scorer.py: const_bool@285:False",
+        "scorer.py: const_int@307:1",
+        "scorer.py: const_int@330:1",
+        "binding.py: cmp@121:Eq",
+        "binding.py: const_bool@142:True",
+        "binding.py: const_int@147:1",
+        "binding.py: cmp@147:LtE",
+        "binding.py: bool@147:And",
+        "binding.py: const_int@148:1",
+        "binding.py: cmp@175:Eq",
+        "binding.py: bool@175:Or",
+        "outcome.py: not@64:Not",
+        "outcome.py: const_int@88:0",
+        "outcome.py: const_int@93:0"
+      ]
+    },
+    {
+      "log_file": "mutation_run2.log",
+      "log_sha256": "20e37f0fa39012c7cc3b12a466410833640cf7550be9c03a16863b7ed67dc3b4",
+      "sites_per_target": {
+        "scorer.py": 85,
+        "binding.py": 32,
+        "outcome.py": 15
+      },
+      "sites_total": 132,
+      "survivors_full_suite": 14,
+      "detected": 118,
+      "detected_pct": 89.4,
+      "runtime_min": 8.2,
+      "survivor_list": [
+        "scorer.py: const_bool@53:True",
+        "scorer.py: bool@73:Or",
+        "scorer.py: const_bool@166:False",
+        "scorer.py: const_bool@170:False",
+        "scorer.py: const_bool@201:False",
+        "scorer.py: bool@203:Or",
+        "scorer.py: const_bool@207:False",
+        "scorer.py: cmp@223:In",
+        "scorer.py: const_bool@285:False",
+        "binding.py: const_int@154:1",
+        "binding.py: bool@154:And",
+        "binding.py: const_int@155:1",
+        "outcome.py: const_int@88:0",
+        "outcome.py: const_int@93:0"
+      ]
+    },
+    {
+      "log_file": "mutation_run3.log",
+      "log_sha256": "9dec7abf83fbe0fbd85df84a1fe2daece6e4547d992bc8d2cc81f17133728fbb",
+      "sites_per_target": {
+        "scorer.py": 85,
+        "binding.py": 32,
+        "outcome.py": 15
+      },
+      "sites_total": 132,
+      "survivors_full_suite": 8,
+      "detected": 124,
+      "detected_pct": 93.9,
+      "runtime_min": 7.3,
+      "survivor_list": [
+        "scorer.py: const_bool@53:True",
+        "scorer.py: const_bool@166:False",
+        "scorer.py: const_bool@170:False",
+        "scorer.py: const_bool@201:False",
+        "scorer.py: const_bool@207:False",
+        "scorer.py: cmp@223:In",
+        "outcome.py: const_int@88:0",
+        "outcome.py: const_int@93:0"
+      ]
+    }
+  ]
+}
