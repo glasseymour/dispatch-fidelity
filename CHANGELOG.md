@@ -43,6 +43,27 @@ same collision as #24 on 2026-08-07, except one side is now immutable, so arriva
 does not decide it: the published number wins. Recorded in
 [REVIEW_PROVENANCE.md](REVIEW_PROVENANCE.md).
 
+### Boundary condition on the 19.8% (deposit v4)
+
+The silent-substitution figure behind finding #16 was reported without stating what the
+agent could **see** after a tool failed. The proxy produces that representation —
+`ERROR:<ExceptionType>`, no message, no traceback — so it was an **interface intervention**
+as well as a recorder, and the rate is conditional on it. All 18 cases also arose on one
+tool.
+
+Recorded in the method deposit as v4, [10.5281/zenodo.21848501](https://doi.org/10.5281/zenodo.21848501),
+with a machine-readable regime identifier (`docs/error_surface.json`,
+`proxy-normalized-type-only/1`). The registered primary outcome is unaffected: 10/1250 =
+0.80% asks whether a claimed call happened, which does not depend on how a failure was
+displayed.
+
+The consequence for this repository is a wording change with teeth: **a fidelity rate is a
+property of a system–interface–workload configuration.** "System" was too large a box.
+
+ADR-004 gains the three-plane separation this implies — execution, measurement,
+presentation — and the restatement of #16's rule against typed status rather than an
+`ERROR` string prefix.
+
 ### Also
 
 - **`publish.yml` restructured.** Triggered by the tag, not by a published release, and it

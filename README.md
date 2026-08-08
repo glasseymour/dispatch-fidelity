@@ -222,6 +222,16 @@ That is a dispatch-fidelity question, not a correctness one — the agent report
 finding #16, class `P8`, with two negative controls beside it. See
 [CHANGELOG.md](CHANGELOG.md).
 
+That 19.8% carries a boundary condition worth repeating here, because it changes what the
+number is *about*. It was measured under an error surface the proxy itself produced —
+`ERROR:<ExceptionType>`, no message, no traceback. The proxy was not only recording; it
+decided what the agent had to reason from after a failure. A fidelity rate is therefore a
+property of a **system–interface–workload configuration**, not of a system alone: the
+model, the tool contract, the error surface, the retry policy, the orchestration and the
+task set produce the observed behaviour together. The regime is named in the deposit as
+`proxy-normalized-type-only/1` (`docs/error_surface.json`, deposit v4,
+[10.5281/zenodo.21848501](https://doi.org/10.5281/zenodo.21848501)).
+
 **The boundary worth stating plainly:** where the signer and the runner are the same
 party, provenance is complete against accidental mixing and after-the-fact modification,
 and absent against an actor fabricating at run time. If you instrument your own system

@@ -4,9 +4,20 @@
 
 ## What a fabrication rate is
 
-A property of one system running one workload under one configuration. Not a grade, not a
-model ranking, and not transferable. Change the task pool and it moves; change the
-orchestration shape and it moves; change the model and it moves.
+A property of a **system–interface–workload configuration**. Not a grade, not a model
+ranking, and not transferable. Change the task pool and it moves; change the orchestration
+shape and it moves; change the model and it moves — and, less obviously, change **what the
+agent sees when a tool fails** and it may move too.
+
+"System" is too large a box. The model, the tool contract, the error surface, the retry
+policy, the orchestration and the task set produce the observed behaviour together. The
+source measurement's 19.8% silent-substitution rate was taken under a proxy-produced error
+surface of the form `ERROR:<ExceptionType>` — no message, no traceback — which means the
+instrument was also an interface intervention. Whether that representation raises or lowers
+the rate is an open experimental question, not a known quantity.
+
+**So name your regime when you publish a number.** `arg_canonicalisation` is already in
+every result; the error surface deserves the same treatment.
 
 This is why `dispatch-fidelity` is a tool you run rather than a leaderboard you cite.
 

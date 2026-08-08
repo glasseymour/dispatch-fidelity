@@ -76,6 +76,51 @@ Evidence rests on lifecycle and causal linkage, not on a total order imposed aft
 The current `seq` gap check becomes a per-agent-stream check, and cross-stream ordering
 is not claimed where it was never observed.
 
+### Three planes, currently two
+
+I6 is bigger than "exception handling changes shape". The proxy today fuses three jobs:
+
+```
+1. execute the tool
+2. record what happened
+3. produce the error representation the AGENT sees
+```
+
+Because of (3) it is not an observer. It is an intervention: it decides what information
+the agent has to reason from after a failure, and the silent-substitution rate is measured
+through that decision. `ERROR:<ExceptionType>` is terse, regular and easy to recognise. A
+native framework error may be a structured object, a one-line message, a long traceback, a
+silently retried call, or an exception that aborts the graph. These are not the same
+stimulus.
+
+The measurement and presentation planes must therefore separate:
+
+```
+original exception
+   ├──▶ recorder            status = FAILED
+   │                        exception_type, message_hash, traceback_hash
+   │
+   ├──▶ error presenter     policy = normalized-type-only/1
+   │                                 native-message/1
+   │                                 structured-error/1
+   │                                 full-traceback/1
+   │
+   └──▶ agent
+```
+
+The scorer reads **only** the recorder's typed status. Finding #16's rule stops asking
+whether a logged string starts with `ERROR` and becomes:
+
+```
+matching execution status == FAILED
+and the final claim asserts a successful value
+and no later successful attempt exists for the same logical_call_id
+```
+
+`normalized-type-only/1` is kept, named and versioned, so the deposit's measurement stays
+reproducible. The transparent mode does not replace it — it creates a second, named
+measurement regime, which is what makes the error-surface experiment possible at all.
+
 **I6 — The proxy is transparent.** Return type, exception semantics, cancellation,
 timeout, streaming and retry identity pass through unchanged. Today the proxy stringifies
 every result and converts every exception to `ERROR:<type>` — an observer effect that
