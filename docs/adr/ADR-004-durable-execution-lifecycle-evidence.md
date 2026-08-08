@@ -20,27 +20,24 @@ ran. That assumption has never been examined, and it does not hold.
 hard kill between the side effect and the append leaves an executed call **with no trace
 at all**.
 
-**The direction of the resulting error — corrected 2026-08-08.** An earlier draft of
-this ADR said the failure mode is a *false accusation*: the log line is lost, the report
-still names the call, the scorer returns `FABRICATED`. That is true only in the narrow
-case of a single process whose report survives, and the draft stated it without the
-condition. It generalised an unsupported claim from a review source — the shape this
-whole protocol exists to catch — and a second review caught it.
+**The direction of the error depends on what survives the crash.**
 
-The real exposure is a **false clearance**:
+In a single process whose report still gets written, the lost log line produces a *false
+accusation*: the report names the call, the log does not hold it, and the scorer returns
+`FABRICATED`.
 
-- A worker dies after the side effect but before both the log write and its reply. The
-  orchestrator survives and reports on what it received. The call appears **nowhere** —
-  not in the log, not in the report — and the run can be `PASS` **with a side effect that
-  happened**.
-- Sharper still, with a retry: the lost first attempt's side effect occurred, the second
-  attempt is logged, the report shows one successful call, the verdict is clean, and the
-  operation ran **twice**.
+Where the crash takes a worker but not the orchestrator, the exposure reverses. The
+worker dies after the side effect but before both the log write and its reply; the
+orchestrator reports on what it received; the call appears in **neither** the log nor the
+report, and the run can be `PASS` with a side effect that happened. With a retry it is
+sharper still — the lost attempt ran, the second is logged, the report shows one
+successful call, the verdict is clean, and the operation executed twice.
 
-So the gap is not closed at the verdict level either, and the urgency argument that
-deferred this work loses its main support. The sequencing still holds, but for a weaker
-and more honest reason: the wire format must not be designed against this repository's
-own harness. `async_call`, typed canonicalisation and a signed chain remain scaling.
+That second case is a false clearance, which is the failure class this instrument exists
+to catch. So the gap is not closed at the verdict level, and the reason to sequence this
+work behind real integrations is narrower than convenience: an event format must not be
+designed against this repository's own harness, because earlier logs age with it.
+`async_call`, typed canonicalisation and a signed chain remain scaling.
 
 ## Why an ADR before code
 

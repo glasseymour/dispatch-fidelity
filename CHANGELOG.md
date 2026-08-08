@@ -80,9 +80,10 @@ presentation — and the restatement of #16's rule against typed status rather t
   run. It now says what happened for v0.3.0, what will happen from v0.3.1, and states
   plainly that the workflow is a plan in version control rather than a property of any
   downloadable artifact.
-- **ADR-004's crash-window claim corrected**, dated in the text. The earlier direction —
-  "false accusation, not false clearance" — held only for a single surviving process.
-  See the provenance file: it is the first recorded case of a review source being wrong.
+- **ADR-004's crash-window paragraph rewritten** to state the error direction
+  conditionally. It is a false accusation only where the report survives; where a worker
+  dies and the orchestrator does not, the call appears in neither the log nor the report
+  and the run can pass with a side effect that happened.
 - **I7 raised to a measurement-plane axiom** in ADR-004: *the absence of measurement
   cannot be encoded as the absence of a defect.* It is the abstract shape of #18, #20, #24
   and #25.
