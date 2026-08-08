@@ -50,6 +50,14 @@ PROVEN, UNPROVEN, FAILED = "PROVEN", "UNPROVEN", "FAILED"
 
 @dataclass
 class BindingResult:
+    """Producer-owned result object: supported instances come from `check_binding()`.
+
+    Direct construction with internally inconsistent fields is outside the supported
+    API contract. Since the canonicalisation, `status` self-derives from the tri-state
+    check values, so the worst a hand-built instance can now do is carry explanations
+    that do not match its checks.
+    """
+
     run_id: str
     checks: dict = field(default_factory=dict)
     unprovable: list = field(default_factory=list)

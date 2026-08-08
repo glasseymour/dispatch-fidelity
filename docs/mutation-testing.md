@@ -32,9 +32,18 @@ displayed check and a `PROVEN` status to coexist when the corresponding explanat
 entry was absent. A constructive probe ran first — across all 256 combinations of eight
 structural input dimensions, no enumerated input produced a displayed check contradicting
 the verdict, so `check_binding` had always written the two together. Nothing enforced it.
-The status is now derived canonically from the tri-state check values through a single
-`add_check` path, with regression coverage for the `PROVEN`, `UNPROVEN` and `FAILED`
-mappings and for the precedence rule (contradicted evidence beats incomplete evidence).
+The status is now derived canonically from the tri-state check values. The `add_check`
+helper couples values and explanations where a check has a single explanatory path;
+checks with multiple possible explanations remain assembled explicitly. Regression
+coverage pins the `PROVEN`, `UNPROVEN` and `FAILED` mappings and the precedence rule
+(contradicted evidence beats incomplete evidence). A wheel probe recorded the measured
+fact with its correct scope in the triage register: the `None` branch of the exported
+field is producer-reachable and was handled correctly by the released code; the
+erroneous combination arose only through unsupported direct construction.
+`BindingResult`, `DispatchScore` and `Outcome` are **producer-owned result objects**:
+supported instances are obtained from `check_binding()`, `score()` and `decide()`
+respectively, and direct construction with internally inconsistent fields is outside
+the supported API contract.
 
 **A set of test-contract repairs.** The surviving mutants exposed contracts the suite
 stated nowhere: exact counter values, the `strict_results=False` default — a published
