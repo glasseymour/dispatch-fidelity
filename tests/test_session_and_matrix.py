@@ -31,7 +31,10 @@ def test_manifest_is_sealed_before_the_run(tmp_path):
     session = AuditSession(tools=TOOLS, run_dir=tmp_path, schema=SCHEMA)
     manifest = json.loads(session.manifest_path.read_text(encoding="utf-8"))
     assert manifest["nonce_sha256"] and "nonce" not in manifest
-    assert not session.log_path.exists()      # nothing logged yet
+    # Since #29 the proxy holds ONE open handle for the log's whole life, so the file
+    # exists (empty) from construction. The property that matters is unchanged: nothing
+    # has been logged before the run starts.
+    assert session.log_path.read_text(encoding="utf-8") == ""
 
 
 def test_the_plaintext_nonce_never_reaches_disk(tmp_path):

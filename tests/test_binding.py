@@ -53,3 +53,34 @@ def test_binding_is_unprovable_without_a_canary_call(tmp_path):
 def test_nonce_recovery_reads_the_probe_receipt(tmp_path):
     s, _ = mock_agent.faithful_artifacts(run_dir=tmp_path, run_id="d")
     assert recover_nonce(load_log(s.log_path)) == s._nonce
+
+
+def test_concurrent_calls_lose_nothing(tmp_path):
+    """Finding #29, from the LangGraph integration probe.
+
+    ToolNode executes one message's tool calls in parallel on separate threads. The
+    proxy's sequence increment was a read-modify-write and its append a separate
+    open-write-close, so a 64-call batch dropped up to three EXECUTED calls from the
+    log — 13 of 20 probe runs lost at least one. The instrument's own evidence layer
+    violated I7 under the concurrency a real framework actually uses.
+    """
+    import concurrent.futures as cf
+
+    from dispatch_fidelity import AuditSession
+
+    def spin(n: int) -> str:
+        x = 0
+        for i in range(4000):
+            x += i
+        return f"r{n}"
+
+    session = AuditSession(tools={"spin": spin}, run_dir=tmp_path, run_id="conc",
+                           schema={"spin": {"params": ["n"]}}, with_canary=False)
+    with cf.ThreadPoolExecutor(max_workers=16) as ex:
+        list(ex.map(lambda i: session.call("spin", {"n": i}), range(64)))
+
+    records = load_log(session.log_path)
+    assert records.intact
+    assert len(records) == 64, "an executed call vanished from the log"
+    assert sorted(r["seq"] for r in records) == list(range(1, 65))
+    assert {r["args"]["n"] for r in records} == set(range(64))

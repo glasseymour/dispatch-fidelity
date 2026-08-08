@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import threading
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -35,10 +36,38 @@ class LoggingProxy:
         log_dir.mkdir(parents=True, exist_ok=True)
         self._path = log_dir / f"{run_id}.toollog.jsonl"
         self._seq = 0
+        # Finding #29. `self._seq += 1` is a read-modify-write, and the append was a
+        # separate open-write-close per call. Under concurrency that loses EXECUTED
+        # CALLS outright: measured against LangGraph's ToolNode, which runs the tool
+        # calls of one message in parallel on separate threads, 13 of 20 runs dropped
+        # records from a 64-call batch — up to three at a time.
+        #
+        # The sequence number and the write live under one lock, so a record's number
+        # and its line cannot be produced by different interleavings.
+        #
+        # ONE handle, opened once, not one open-append-close per call. The first fix
+        # kept per-call opens under the lock and still lost lines on Windows: 64
+        # serialized open-write-close cycles left 60 lines in the file, with every
+        # call() returning success. Whatever the OS-level mechanism (delayed metadata
+        # on rapidly reopened append handles is the usual suspect), the defence is to
+        # stop doing the thing: a single handle plus an explicit flush per record.
+        self._lock = threading.Lock()
+        self._fh = open(self._path, "a", encoding="utf-8")
 
     @property
     def log_path(self) -> Path:
         return self._path
+
+    def close(self) -> None:
+        with self._lock:
+            if not self._fh.closed:
+                self._fh.close()
+
+    def __del__(self):  # best-effort; close() is the real contract
+        try:
+            self.close()
+        except Exception:
+            pass
 
     @property
     def tool_names(self) -> list[str]:
@@ -64,20 +93,26 @@ class LoggingProxy:
         if len(text) > MAX_RESULT_CHARS:
             text = text[:MAX_RESULT_CHARS] + f"...[truncated {len(text)} chars]"
 
-        self._seq += 1
-        record = {
-            "seq": self._seq,
-            "run_id": self._run_id,
-            "agent_id": agent_id,
-            "tool": tool,
-            "args": args,
-            "result": text,
-            "result_sha256": hashlib.sha256(text.encode()).hexdigest(),
-            "ts": datetime.now(timezone.utc).isoformat(),
-            "monotonic": time.monotonic(),
-        }
-        with open(self._path, "a", encoding="utf-8") as fh:
-            fh.write(json.dumps(record, ensure_ascii=False) + "\n")
+        # Sequence assignment and the write happen under ONE lock acquisition, so a
+        # record's number and its line cannot come from different interleavings — and
+        # the write goes to the single shared handle, never a fresh open. Composing the
+        # record inside the lock costs a few microseconds of serialization and buys the
+        # property the evidence layer exists for: every executed call has a line.
+        with self._lock:
+            self._seq += 1
+            record = {
+                "seq": self._seq,
+                "run_id": self._run_id,
+                "agent_id": agent_id,
+                "tool": tool,
+                "args": args,
+                "result": text,
+                "result_sha256": hashlib.sha256(text.encode()).hexdigest(),
+                "ts": datetime.now(timezone.utc).isoformat(),
+                "monotonic": time.monotonic(),
+            }
+            self._fh.write(json.dumps(record, ensure_ascii=False) + "\n")
+            self._fh.flush()
         return text
 
 
