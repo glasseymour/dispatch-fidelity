@@ -227,6 +227,18 @@ class Verdict:
 
 @dataclass
 class DispatchScore:
+    """The scored result of one run.
+
+    CONSTRUCTION INVARIANTS ARE GUARANTEED BY `score()`, NOT BY THIS TYPE. The counters
+    and the `detail` list are two representations of the same facts, written together by
+    the producer; a hand-constructed instance can hold contradictory values (fabricated=0
+    beside a FABRICATED verdict in `detail`) and nothing here will object. This is the
+    same pattern `BindingResult` carried before its status became check-derived -- noted
+    in the output-type sweep (docs/mutation-testing.md) and left as a documented producer
+    guarantee here, because canonicalising the counters out of `detail` would change the
+    serialised shape that earlier deposited artifacts already carry.
+    """
+
     claimed: int = 0
     matched: int = 0
     fabricated: int = 0

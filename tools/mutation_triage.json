@@ -14,22 +14,46 @@
     "from this register."
   ],
   "final_pass_survivors": [
-    {"site": "scorer.py cmp/sort const_bool@53", "class": "A1",
-     "reason": "sort_keys flip over an input the comprehension already sorted; output bytes identical"},
-    {"site": "scorer.py const_bool@166", "class": "A2",
-     "reason": "guard return in is_silent_substitution; unreachable from score(), which only calls it with non-empty candidates"},
-    {"site": "scorer.py const_bool@170", "class": "A2",
-     "reason": "guard return on the all-errored condition edge; unreachable with the argument combinations the pipeline constructs"},
-    {"site": "scorer.py const_bool@201", "class": "A2",
-     "reason": "None-valued claimed_result guard; callers always pass str(claim.get(...)), never None"},
-    {"site": "scorer.py const_bool@207", "class": "A2",
-     "reason": "empty-normalised-claim guard edge; pipeline inputs cannot reach it with the mutated value observable"},
-    {"site": "scorer.py cmp@223", "class": "A3",
-     "reason": "verdict-tuple membership in Verdict.to_dict; controls whether claimed_result appears in the DETAIL dict, carries no verdict"},
-    {"site": "outcome.py const_int@88", "class": "A2",
-     "reason": "getattr duck-typing default for `mismatched`; every real DispatchScore carries the attribute"},
-    {"site": "outcome.py const_int@93", "class": "A2",
-     "reason": "same duck-typing default at the hard-failure disjunction"}
+    {
+      "site": "scorer.py cmp/sort const_bool@53",
+      "class": "A1",
+      "reason": "sort_keys flip over an input the comprehension already sorted; output bytes identical"
+    },
+    {
+      "site": "scorer.py const_bool@166",
+      "class": "A2",
+      "reason": "guard return in is_silent_substitution; unreachable from score(), which only calls it with non-empty candidates"
+    },
+    {
+      "site": "scorer.py const_bool@170",
+      "class": "A2",
+      "reason": "guard return on the all-errored condition edge; unreachable with the argument combinations the pipeline constructs"
+    },
+    {
+      "site": "scorer.py const_bool@201",
+      "class": "A2",
+      "reason": "None-valued claimed_result guard; callers always pass str(claim.get(...)), never None"
+    },
+    {
+      "site": "scorer.py const_bool@207",
+      "class": "A2",
+      "reason": "empty-normalised-claim guard edge; pipeline inputs cannot reach it with the mutated value observable"
+    },
+    {
+      "site": "scorer.py cmp@223",
+      "class": "A3",
+      "reason": "verdict-tuple membership in Verdict.to_dict; controls whether claimed_result appears in the DETAIL dict, carries no verdict"
+    },
+    {
+      "site": "outcome.py const_int@88",
+      "class": "A2",
+      "reason": "getattr duck-typing default for `mismatched`; every real DispatchScore carries the attribute"
+    },
+    {
+      "site": "outcome.py const_int@93",
+      "class": "A2",
+      "reason": "same duck-typing default at the hard-failure disjunction"
+    }
   ],
   "actionable_survivors_resolved_in_passes_2_and_3": {
     "structural": [
@@ -45,5 +69,18 @@
       "role matching vs LOGGED argument insertion order untested",
       "PASS outcome's empty reason list unasserted"
     ]
-  }
+  },
+  "classification_decisions": [
+    {
+      "case": "binding display-gate coupling (the structural survivor family)",
+      "date": "2026-08-08",
+      "reproduction": "On the released v0.3.0, direct construction of the EXPORTED BindingResult type -- BindingResult(run_id='x', checks={'B1': False}) -- yielded status PROVEN: the old status derived FAILED only from the findings list and ignored a False check value. A 256-combination constructive probe over the check_binding pipeline found no input producing this state end-to-end.",
+      "position_for_a_number": "BindingResult is exported at package top level and listed in __all__; the contradictory state was reproducible on the unchanged release artifact, and the fix changed observable public behaviour -- released behaviour under the numbering rule.",
+      "position_against": "BindingResult is an OUTPUT type: check_binding produces it, consumers read it. Hand-constructing one with contradictory fields is not an input to the system but fabrication of a result object. No supported usage path produced a wrong verdict; the defect is that the type permitted representing an invalid state -- a design weakness (make invalid states unrepresentable), not observed misbehaviour. Numbering output-type invariant gaps would dilute the ledger: any dataclass that does not validate itself would qualify.",
+      "verdict": "structural hardening, NO finding number",
+      "rule_refined": "A finding number marks released behaviour reachable through a SUPPORTED USAGE PATH. Output-type invariant gaps get the canonicalisation fix, tests, and a non-silent register entry -- this one.",
+      "scope_note": "The earlier 'the 256-case probe closes this' judgement claimed more than the probe covered: the probe spanned the check_binding pipeline, the judgement spoke of the released code entire. A closing judgement must not outrange the probe it cites.",
+      "output_type_sweep": "DispatchScore (counters vs detail) and Outcome (overall vs reasons) carry the same dual-representation pattern; exit_code is derived and cannot disagree. Resolution: documented producer guarantee in their docstrings rather than canonicalisation, because deriving DispatchScore's counters from detail would change the serialised shape earlier deposited artifacts already carry. Neither silent, nor numbered."
+    }
+  ]
 }

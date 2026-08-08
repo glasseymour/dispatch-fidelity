@@ -2,7 +2,9 @@
 
 Findings get numbers here, continuing the numbering of the correction protocol in the
 [method deposit](https://doi.org/10.5281/zenodo.21812041). The deposit records fifteen;
-this file starts at sixteen.
+this file starts at sixteen. A number marks **released behaviour reachable through a
+supported usage path** — output-type invariant gaps and test-contract gaps get fixes and
+non-silent register entries, not numbers, so the ledger keeps meaning something.
 
 The reason for one shared sequence: a finding about the instrument is a finding about the
 instrument, whether it lands in a research harness or in a package. Restarting the count
@@ -38,6 +40,15 @@ strengthening and a set of test-contract repairs:
   targets; pass 3 exists because the loop was applied to its own repairs.
 - The eight remaining survivors are **judged on review** — per-mutant register in
   `tools/mutation_triage.json` — and no adjusted score is derived from them.
+- **Classification, decided rather than left implicit.** On the released v0.3.0, direct
+  construction of the exported `BindingResult` type with a `False` check and no finding
+  reported `PROVEN`. Weighed for a finding number and classified as **hardening without
+  one**: `BindingResult` is an output type — hand-constructing one with contradictory
+  fields fabricates a result object rather than exercising a supported usage path, and
+  no such path produced a wrong verdict. The numbering rule gains the clause this edge
+  exposed: *a finding number marks released behaviour reachable through a supported
+  usage path.* The full weighing, including the counter-position, is recorded in the
+  triage register.
 
 ### Finding #29 — the proxy lost executed calls under parallelism
 

@@ -41,6 +41,14 @@ EXIT = {PASS: 0, FAIL: 1, INCONCLUSIVE: 2}
 
 @dataclass
 class Outcome:
+    """CONSTRUCTION INVARIANTS ARE GUARANTEED BY `decide()`, NOT BY THIS TYPE.
+
+    `overall` and `reasons` are separate fields written together by the producer; a
+    hand-constructed instance can pair PASS with failure reasons. `exit_code` is the
+    exception: it derives from `overall` and cannot disagree with it. Noted in the
+    output-type sweep (docs/mutation-testing.md).
+    """
+
     overall: str
     measurement: str                       # MEASURED | UNMEASURED
     binding: str | None                    # PROVEN | UNPROVEN | FAILED | None

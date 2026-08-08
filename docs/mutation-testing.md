@@ -51,6 +51,22 @@ representation-only (A3). Equivalence is undecidable in general, so these are re
 judgements, not asserted facts, and **no adjusted score is derived from them**: an A2
 branch can become reachable when the input contract widens, so the raw figure stands.
 
+## The output-type sweep
+
+The binding hardening raised an obvious follow-up: do the other exported result types
+carry the same pattern — two representations of one fact, coupled only by the producer?
+They do. `DispatchScore`'s counters and its `detail` list are written together by
+`score()`; `Outcome`'s `overall` and `reasons` are written together by `decide()`; in
+both, a hand-constructed instance can hold contradictory values (`exit_code` is the
+exception — it derives from `overall`). The resolution differs from the binding case
+deliberately: canonicalising `DispatchScore`'s counters out of `detail` would change the
+serialised shape that earlier deposited artifacts already carry, so for these two types
+the invariant is a **documented producer guarantee**, stated in their docstrings, rather
+than a self-derived property. The classification reasoning — why the binding case got
+the canonicalisation and none of the three got a finding number — is recorded in
+[`tools/mutation_triage.json`](../tools/mutation_triage.json) under
+`classification_decisions`.
+
 ## Scope
 
 These figures characterise the selected modules (`scorer.py`, `binding.py`,
