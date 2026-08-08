@@ -24,9 +24,9 @@ and archive filenames are immutable on both platforms, so this cannot be unified
 retroactively. Both artifact sets carry build attestations. From v0.3.1, one build feeds
 every channel, which is what the workflow was built to guarantee.)*
 
-> **Compatibility note.** v0.3.0 is intended for **sequential tool execution**. Parallel
-> in-process recording is corrected on the current development branch (finding #29,
-> found by the LangGraph integration probe) and ships in v0.3.1.
+> **Compatibility note.** v0.3.0 is intended for **sequential tool execution**; parallel
+> in-process recording is corrected in v0.3.1 (finding #29, found by the LangGraph
+> integration probe before any external deployment).
 
 The demo runs three scripted agents offline — no key, no network, no model.
 

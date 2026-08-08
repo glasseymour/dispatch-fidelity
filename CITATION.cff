@@ -8,10 +8,10 @@ authors:
     orcid: "https://orcid.org/0009-0003-1020-834X"
 repository-code: "https://github.com/glasseymour/dispatch-fidelity"
 license: Apache-2.0
-version: 0.3.1rc1
+version: 0.3.1
 # The version DOI, matching the `version:` field above. The concept DOI resolves to the
 # latest release, so putting it here would make this file describe a different artifact
-# every time a version ships — with `version: 0.3.1rc1` still written beside it. Finding #27.
+# every time a version ships — with `version: 0.3.1` still written beside it. Finding #27.
 doi: 10.5281/zenodo.21841083
 identifiers:
   - type: doi

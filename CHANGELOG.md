@@ -10,7 +10,7 @@ The reason for one shared sequence: a finding about the instrument is a finding 
 instrument, whether it lands in a research harness or in a package. Restarting the count
 at 1 here would make the tool look younger than its correction history.
 
-## Unreleased
+## 0.3.1 — 2026-08-08
 
 ### PyPI — live, via Trusted Publishing
 

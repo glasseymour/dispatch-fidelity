@@ -59,15 +59,20 @@ environment, and published with SHA-256 checksums in the release notes. The tag 
 annotated and **unsigned**. There is no build attestation and no SBOM. This is stated in
 the past tense because it is what happened.
 
-**From v0.3.1.** `.github/workflows/publish.yml` builds once from the tag, verifies the
-wheel from itself, produces a CycloneDX SBOM of a runtime-only environment, attaches
-Sigstore build-provenance and SBOM attestations, then creates the release and publishes to
-PyPI from the same artifact. Tags will be signed. PyPI uses Trusted Publishing, so no
-long-lived token exists in this repository.
+**From v0.3.1rc1 onward.** `.github/workflows/publish.yml` builds once from the tag,
+verifies the wheel from itself, produces a CycloneDX SBOM of a runtime-only environment,
+attaches Sigstore build-provenance and SBOM attestations, then creates the release and
+publishes to PyPI from the same artifact. Tags are signed (SSH, GitHub-verified). PyPI
+uses Trusted Publishing, so no long-lived token exists in this repository.
 
-**That workflow has never run.** It is a plan in version control, not a property of any
-artifact you can download today. Do not treat provenance described there as covering
-v0.3.0.
+**The workflow has now run**, and the claim above is demonstrated rather than planned:
+the v0.3.1rc1 chain (2026-08-08) produced byte-identical artifacts on the GitHub
+release, on PyPI and in the checksum list, from one build, under a verified signed tag,
+with both attestations checkable via `gh attestation verify`. The first live runs also
+caught two pipeline defects — an SBOM CLI flag that had never met the real tool, and a
+missing repository context in the release job — which is what first runs are for, and
+why the previous revision of this section spoke in the future tense. Provenance
+described here covers releases from v0.3.1rc1 onward; it does not cover v0.3.0.
 
 ## Supported versions
 
