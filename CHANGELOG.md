@@ -6,7 +6,7 @@ this file starts at sixteen.
 
 The reason for one shared sequence: a finding about the instrument is a finding about the
 instrument, whether it lands in a research harness or in a package. Restarting the count
-at 1 here would make the tool look younger than its error history.
+at 1 here would make the tool look younger than its correction history.
 
 ## Unreleased
 

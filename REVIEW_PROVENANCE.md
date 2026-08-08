@@ -2,11 +2,10 @@
 
 Where each finding came from, stated at the level of precision that survives scrutiny.
 
-Findings #16–#25 were identified during **model-assisted external review**. They were not
-found by a human reading the code with fresh eyes, and calling them "external review"
-without qualification would let a reader assume otherwise — the same plausible-but-
-unverified shape this instrument exists to catch. In a project whose credibility rests on
-saying exactly what happened, the provenance of its own findings is not an exception.
+Findings #16–#25 were identified during **model-assisted external review**. The review
+channel is recorded precisely so that each finding's provenance is checkable — in a
+project whose credibility rests on saying exactly what happened, the provenance of its
+own findings is not an exception.
 
 What the models did: generated the attack questions and the findings.
 What the human did: reproduced each one against the code, classified it, decided the

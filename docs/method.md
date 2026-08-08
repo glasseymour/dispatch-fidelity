@@ -64,7 +64,7 @@ time in the direction of calling an honest agent a liar:
 
 Each of those produced a plausible number. That is the reason the comments in
 `scorer.py` are long and the reason this table is in the documentation rather than in a
-changelog nobody opens: an instrument's error history is part of its specification.
+changelog nobody opens: an instrument's correction history is part of its specification.
 
 The current rule accepts a truncated receipt at sixteen hex characters because sixty-four
 unguessable bits **are** evidence of execution, and rejects fifteen because a threshold
