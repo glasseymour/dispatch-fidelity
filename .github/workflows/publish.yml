@@ -121,14 +121,17 @@ jobs:
           name: dist
           path: dist/
       # Create complete, or attach to a draft. Never --clobber: replacing an asset on a
-      # published release rewrites something a checksum may already refer to.
+      # published release rewrites something a checksum may already refer to. A tag whose
+      # release is ALREADY published is skipped gracefully rather than failed: that is
+      # the backfill case (a release predating this workflow, like v0.3.0), and the
+      # authoritative duplicate signal for a re-run is PyPI rejecting the version.
       - name: Publish the release with its artifacts
         run: |
           TAG="${{ inputs.tag || github.ref_name }}"
           if gh release view "$TAG" --json isDraft --jq .isDraft 2>/dev/null | grep -qx false; then
-            echo "::error::$TAG is already published. Assets are not replaced on a live"
-            echo "::error::release; cut a new tag instead."
-            exit 1
+            echo "::notice::$TAG already has a published release; its assets are"
+            echo "::notice::immutable by policy. Skipping the release step."
+            exit 0
           fi
           gh release create "$TAG" dist/* --title "$TAG" --generate-notes --verify-tag \
             || gh release upload "$TAG" dist/*
