@@ -20,6 +20,10 @@ include waivers.example.txt
 
 recursive-include docs *.md
 recursive-include tests *.py
+# The mutation evidence ships with the source: the docs reference these files, and an
+# archived artifact whose evidence lives only on a third-party service is not archived
+# in the sense the DOI implies.
+recursive-include tools *.py *.json *.log
 
 # Deliberately excluded: ANCHOR.txt and waivers.txt are this repository's own working
 # configuration, not part of the package. The examples ship instead.
