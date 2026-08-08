@@ -10,6 +10,38 @@ at 1 here would make the tool look younger than its error history.
 
 ## Unreleased
 
+### Finding #29 — the proxy lost executed calls under parallelism
+
+Found by the LangGraph integration probe, before any example was written. `ToolNode`
+executes one message's tool calls **in parallel on separate threads** (measured: three
+0.3-second tools, 0.31s wall-clock). Under that concurrency the proxy's per-call
+open-append-close dropped **executed calls** from the log — 13 of 20 probe runs lost
+records from a 64-call batch, up to three at a time, with every `call()` returning
+success. The instrument's own evidence layer violated I7 under the concurrency a real
+framework actually uses.
+
+In every observed run the loss left a sequence gap, which `B2` catches. Nothing
+guarantees that: a lost tail write leaves a gap-free prefix, which is finding #20's
+geometry produced by the recorder itself.
+
+**Fix.** Sequence assignment, record composition and the write happen under one lock
+against one shared handle held for the log's life; `LoggingProxy` gains `close()`. An
+intermediate fix that serialized per-call opens under the lock *still* lost lines on
+Windows — the defence is to stop reopening, not to reopen carefully. Regression test
+drives the proxy with a 16-worker pool; 25 consecutive stress runs clean.
+
+### LangGraph integration
+
+`examples/langgraph_integration.py` (offline, deterministic) and
+`docs/integrations-langgraph.md`. The gap in a graph is not `ToolNode` — structured
+execution cannot diverge — but the **prose between nodes**: a worker summarises its
+results into text, a supervisor reports from that text, and the embellishing scenario
+produces `SUBSTITUTED` with every dispatch claim true. Also recorded: `wrap_tool_call`'s
+`execute` may run multiple times (empirical basis for the `logical_call_id`/`attempt_id`
+split in ADR-004), graph state is recoverable at call time, and the proxy's
+`ERROR:` string contract means the framework's own error handling never fires — the
+error-surface boundary condition made concrete.
+
 ### Finding #27 — the README and the anchors disagreed, and the gate saw only one
 
 `ANCHOR.txt` said `sensitivity : 17/17`; the README said `15/15` and "twenty-six cases".
