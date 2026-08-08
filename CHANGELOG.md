@@ -12,6 +12,16 @@ at 1 here would make the tool look younger than its correction history.
 
 ## Unreleased
 
+### PyPI — live, via Trusted Publishing
+
+`pip install dispatch-fidelity` works as of 2026-08-08: v0.3.0 published through the
+supply-chain workflow's first live run — OIDC, no long-lived token, the wheel verified
+from itself (selftest + full suite in a clean environment) before upload. Two findings
+from that first run, both fixed: the SBOM step's output flag had never met the real CLI,
+and the release job lacked repository context without a checkout. Known and documented:
+PyPI's 0.3.0 bytes differ from the GitHub-release/DOI bytes (same tag, two builds;
+filenames immutable on both sides); from v0.3.1 one build feeds every channel.
+
 ### Mutation analysis — a test-adequacy baseline, hardening, and rerun
 
 Full write-up in [docs/mutation-testing.md](docs/mutation-testing.md); every figure is

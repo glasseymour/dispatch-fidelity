@@ -13,13 +13,16 @@ your logs says otherwise, because nothing went wrong; something simply never hap
 agent cannot reach.
 
 ```bash
-pip install https://github.com/glasseymour/dispatch-fidelity/releases/download/v0.3.0/dispatch_fidelity-0.3.0-py3-none-any.whl
+pip install dispatch-fidelity
 dispatch-audit demo
 ```
 
-*(Not on PyPI yet. This installs the **released wheel** — the exact bytes covered by the
-software DOI and the published checksum. `git+…` would build whatever `main` happens to
-be, which is a different artifact carrying the same version number; see finding #28.)*
+*(One provenance note, stated rather than left to be discovered: PyPI's 0.3.0 artifacts
+were built by the release workflow from the v0.3.0 tag, so their checksums differ from
+the GitHub-release artifacts archived under the software DOI — same source, two builds,
+and archive filenames are immutable on both platforms, so this cannot be unified
+retroactively. Both artifact sets carry build attestations. From v0.3.1, one build feeds
+every channel, which is what the workflow was built to guarantee.)*
 
 > **Compatibility note.** v0.3.0 is intended for **sequential tool execution**. Parallel
 > in-process recording is corrected on the current development branch (finding #29,

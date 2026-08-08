@@ -137,6 +137,9 @@ jobs:
             || gh release upload "$TAG" dist/*
         env:
           GH_TOKEN: ${{ github.token }}
+          # No checkout in this job -- gh needs the repo named explicitly, or every
+          # command fails with "not a git repository" (first live run, 2026-08-08).
+          GH_REPO: ${{ github.repository }}
 
   pypi:
     needs: [build, attest]
