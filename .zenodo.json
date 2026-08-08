@@ -35,6 +35,12 @@
       "relation": "isSupplementTo",
       "resource_type": "software",
       "scheme": "url"
+    },
+    {
+      "identifier": "10.5281/zenodo.21841082",
+      "relation": "continues",
+      "resource_type": "software",
+      "scheme": "doi"
     }
   ],
   "notes": "This work is part of the author's independently developed and publicly documented research programme on measurement, verifiability and instrument validation, conducted and published in a personal research capacity. The views and conclusions are solely the author's own and do not represent any employer or institution. The published materials contain no non-public institutional information and make no claim of institutional endorsement. Model-assisted review provenance and the author's disposition of resulting findings are documented in REVIEW_PROVENANCE.md."
