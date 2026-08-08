@@ -4,6 +4,9 @@
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21850624.svg)](https://doi.org/10.5281/zenodo.21850624)
 
+**New here?** Start with the introduction: [*Every claim in this agent's report is true.
+The run still fails.*](https://github.com/glasseymour/dispatch-fidelity/discussions/1)
+
 **Did your agent actually call what it says it called?**
 
 An agentic system reports what it did. Somewhere between the tool layer and the summary,
