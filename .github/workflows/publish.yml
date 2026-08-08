@@ -65,7 +65,7 @@ jobs:
         run: |
           python -m pip install --quiet cyclonedx-bom
           python -m cyclonedx_py environment /tmp/runtime \
-            --output-format JSON --outfile dist/sbom.cyclonedx.json
+            --output-format JSON --output-file dist/sbom.cyclonedx.json
           python - <<'PY'
           import json
           bom = json.load(open("dist/sbom.cyclonedx.json"))
