@@ -1,0 +1,27 @@
+# What the source distribution carries beyond the code.
+#
+# The v0.3.0 sdist held LICENSE, NOTICE and README.md and nothing else, while the Zenodo
+# software record's description pointed readers at REVIEW_PROVENANCE.md and "the
+# repository's CHANGELOG". Neither was in the downloadable files, so both pointers
+# resolved only through GitHub — an archived artifact whose own history is reachable only
+# if a third-party service stays up.
+#
+# The method deposit is self-contained by design; the software record should be too. From
+# the next release the sdist carries its own correction history, provenance, threat model,
+# citation metadata and design documents.
+
+include CHANGELOG.md
+include REVIEW_PROVENANCE.md
+include SECURITY.md
+include CONTRIBUTING.md
+include CITATION.cff
+include ANCHOR.example.txt
+include waivers.example.txt
+
+recursive-include docs *.md
+recursive-include tests *.py
+
+# Deliberately excluded: ANCHOR.txt and waivers.txt are this repository's own working
+# configuration, not part of the package. The examples ship instead.
+exclude ANCHOR.txt
+exclude waivers.txt
